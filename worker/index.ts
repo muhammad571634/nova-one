@@ -142,6 +142,50 @@ async function processNextJob() {
     console.log(`[Job ${job.id}] Spawning claude -p ${kind.toUpperCase()}...`);
     const runStartTime = new Date().toISOString();
 
+    const claudeSettingsDir = path.join(job.job_dir, '.claude');
+    if (!fs.existsSync(claudeSettingsDir)) fs.mkdirSync(claudeSettingsDir, { recursive: true });
+    
+    // Inject global trust
+    try {
+      const globalConfigPath = 'C:/Users/joray/.claude.json';
+      if (fs.existsSync(globalConfigPath)) {
+        const config = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
+        if (!config.projects) config.projects = {};
+        const jobKeyFwd = job.job_dir.replace(/\\/g, '/');
+        const jobKeyBck = job.job_dir.replace(/\//g, '\\');
+        if (!config.projects[jobKeyFwd]) config.projects[jobKeyFwd] = {};
+        if (!config.projects[jobKeyBck]) config.projects[jobKeyBck] = {};
+        config.projects[jobKeyFwd].hasTrustDialogAccepted = true;
+        config.projects[jobKeyBck].hasTrustDialogAccepted = true;
+        fs.writeFileSync(globalConfigPath, JSON.stringify(config, null, 2));
+      }
+    } catch (err) {
+      console.error('Failed to trust job directory in .claude.json', err);
+    }
+
+    fs.writeFileSync(
+      path.join(claudeSettingsDir, 'settings.json'),
+      JSON.stringify({
+        permissions: {
+          allow: [
+            "Read(C:/Users/joray/.claude/skills/**)",
+            "Read(C:\\Users\\joray\\.claude\\skills\\**)",
+            "Bash(*)",
+            "PowerShell(*)",
+            "Read(*)",
+            "Write(*)",
+            "Glob(*)",
+            "Grep(*)",
+            "Task(*)",
+            "TaskOutput(*)",
+            "TaskStop(*)",
+            "WebFetch(*)",
+            "Skill(*)"
+          ]
+        }
+      }, null, 2)
+    );
+
     const result = await runClaudeHeadless({
       jobId: job.id,
       kind: kind as 'plan' | 'revise' | 'build' | 'edit',
@@ -200,6 +244,12 @@ async function processNextJob() {
     }
 
   } catch (err: any) {
+    const currentJob = db.prepare("SELECT status FROM jobs WHERE id = ?").get(job.id) as any;
+    if (currentJob?.status === 'cancelled') {
+      console.log(`[Job ${job.id}] 🛑 Execution safely stopped because status is 'cancelled'.`);
+      return;
+    }
+
     console.error(`❌ [Job ${job.id}] Error:`, err.message);
     db.prepare(`
       UPDATE jobs

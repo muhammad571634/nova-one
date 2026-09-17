@@ -64,6 +64,115 @@ export async function POST(
       return NextResponse.json({ success: true, status: "queued_rendering" });
     }
 
+    if (action === "cancel") {
+      db.prepare("UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?").run("cancelled", now, id);
+      
+      const eventId = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO job_events (id, job_id, ts, type, payload_json)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        eventId,
+        id,
+        now,
+        "status_change",
+        JSON.stringify({ status: "cancelled", text: "Generation stopped by user." })
+      );
+
+      return NextResponse.json({ success: true, status: "cancelled" });
+    }
+
+    if (action === "restart") {
+      // Clear old log file to prevent Claude from misinterpreting stale errors
+      const runPlanLog = path.join(job.job_dir, "logs", "run-plan.jsonl");
+      if (fs.existsSync(runPlanLog)) {
+        try { fs.unlinkSync(runPlanLog); } catch {}
+      }
+
+      db.prepare("UPDATE jobs SET status = ?, error = NULL, claude_session_id = NULL, updated_at = ? WHERE id = ?")
+        .run("queued", now, id);
+
+      const eventId = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO job_events (id, job_id, ts, type, payload_json)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        eventId,
+        id,
+        now,
+        "status_change",
+        JSON.stringify({ status: "queued", text: "Job restarted by user." })
+      );
+
+      return NextResponse.json({ success: true, status: "queued" });
+    }
+
+    if (action === "edit_brief") {
+      const { url, intent, stylePreset, length, voice, keyMessage, language } = payload || {};
+      
+      let currentBrief: any = {};
+      try {
+        currentBrief = JSON.parse(job.brief_json || "{}");
+      } catch {}
+
+      const updatedConfig = {
+        url: typeof url === "string" ? url.trim() : (currentBrief.url || job.source_url || ""),
+        intent: intent === "show_site" ? "show_site" : "promote",
+        stylePreset: typeof stylePreset === "string" ? stylePreset : (currentBrief.stylePreset || "auto"),
+        length: ["15s", "30s", "45s", "60s"].includes(length) ? length : (currentBrief.length || "45s"),
+        voice: voice === "male" ? "male" : "female",
+        language: typeof language === "string" ? language : (currentBrief.language || "en"),
+        keyMessage: typeof keyMessage === "string" ? keyMessage.trim() : currentBrief.keyMessage,
+      };
+
+      const { generateBriefMarkdown } = await import("@/lib/brief");
+      const newBriefMarkdown = generateBriefMarkdown(updatedConfig as any);
+
+      // Write updated BRIEF.md to job_dir and project_dir
+      if (fs.existsSync(job.job_dir)) {
+        fs.writeFileSync(path.join(job.job_dir, "BRIEF.md"), newBriefMarkdown, "utf8");
+      }
+      if (fs.existsSync(job.project_dir)) {
+        fs.writeFileSync(path.join(job.project_dir, "BRIEF.md"), newBriefMarkdown, "utf8");
+      }
+
+      // Clear old logs so Claude starts completely fresh
+      const logsDir = path.join(job.job_dir, "logs");
+      if (fs.existsSync(logsDir)) {
+        try {
+          const files = fs.readdirSync(logsDir);
+          for (const f of files) {
+            fs.unlinkSync(path.join(logsDir, f));
+          }
+        } catch {}
+      }
+
+      db.prepare(`
+        UPDATE jobs 
+        SET status = 'queued',
+            source_url = ?,
+            brief_json = ?,
+            error = NULL,
+            claude_session_id = NULL,
+            updated_at = ?
+        WHERE id = ?
+      `).run(updatedConfig.url, JSON.stringify(updatedConfig), now, id);
+
+      const eventId = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO job_events (id, job_id, ts, type, payload_json)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        eventId,
+        id,
+        now,
+        "status_change",
+        JSON.stringify({ status: "queued", text: "Brief updated with new instructions and restarted." })
+      );
+
+      return NextResponse.json({ success: true, status: "queued" });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error: any) {
     console.error("Action error:", error);

@@ -20,7 +20,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Film,
-  Download
+  Download,
+  Square,
+  RotateCcw,
+  Pencil,
+  X,
+  StopCircle,
+  Sliders
 } from 'lucide-react';
 import { ParsedStoryboard, StoryboardFrame } from '@/lib/storyboard-parser';
 
@@ -84,12 +90,40 @@ export default function ProjectLiveTracker({
   const [activeCommentFrame, setActiveCommentFrame] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Edit Brief Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editUrl, setEditUrl] = useState(briefConfig?.url || sourceUrl || '');
+  const [editKeyMessage, setEditKeyMessage] = useState(briefConfig?.keyMessage || '');
+  const [editStylePreset, setEditStylePreset] = useState(briefConfig?.stylePreset || 'auto');
+  const [editLength, setEditLength] = useState(briefConfig?.length || '45s');
+  const [editVoice, setEditVoice] = useState(briefConfig?.voice || 'female');
+  const [editIntent, setEditIntent] = useState(briefConfig?.intent || 'promote');
+
   const logsEndRef = useRef<HTMLDivElement | null>(null);
 
-  const handleAction = async (action: 'revise' | 'build' | 'render') => {
+  const handleAction = async (
+    action: 'revise' | 'build' | 'render' | 'cancel' | 'restart' | 'edit_brief',
+    customPayload?: any
+  ) => {
     setIsSubmitting(true);
     try {
-      const payload = action === 'revise' ? { comments } : {};
+      let payload = customPayload;
+      if (!payload) {
+        if (action === 'revise') payload = { comments };
+        else if (action === 'edit_brief') {
+          payload = {
+            url: editUrl,
+            keyMessage: editKeyMessage,
+            stylePreset: editStylePreset,
+            length: editLength,
+            voice: editVoice,
+            intent: editIntent,
+          };
+        } else {
+          payload = {};
+        }
+      }
+
       const res = await fetch(`/api/jobs/${jobId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,6 +133,9 @@ export default function ProjectLiveTracker({
         if (action === 'revise') {
           setComments({});
           setActiveCommentFrame(null);
+        }
+        if (action === 'edit_brief') {
+          setIsEditModalOpen(false);
         }
         window.location.reload();
       } else {
@@ -208,6 +245,8 @@ export default function ProjectLiveTracker({
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : status === 'failed'
                   ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : status === 'cancelled'
+                  ? 'bg-amber-50 text-amber-800 border-amber-200'
                   : 'bg-cyan-50 text-[#0096C7] border-cyan-200'
               }`}
             >
@@ -217,6 +256,8 @@ export default function ProjectLiveTracker({
                     ? 'bg-emerald-500'
                     : status === 'failed'
                     ? 'bg-rose-500'
+                    : status === 'cancelled'
+                    ? 'bg-amber-500'
                     : 'bg-[#00C2FF] animate-ping'
                 }`}
               />
@@ -229,24 +270,116 @@ export default function ProjectLiveTracker({
                   ? 'Worker Initializing…'
                   : status === 'queued'
                   ? 'Queued in Worker'
+                  : status === 'cancelled'
+                  ? 'Generation Stopped'
+                  : status === 'failed'
+                  ? 'Generation Failed'
                   : status}
               </span>
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-500 flex items-center gap-1.5 font-mono">
             <span>Target:</span>
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[#0096C7] hover:underline inline-flex items-center gap-1"
-            >
-              <span>{sourceUrl}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            {sourceUrl ? (
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#0096C7] hover:underline inline-flex items-center gap-1"
+              >
+                <span>{sourceUrl}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ) : (
+              <span className="text-slate-400 italic">Prompt-driven (No website URL)</span>
+            )}
           </p>
         </div>
+
+        {/* Header Action Buttons */}
+        <div className="flex items-center gap-2.5">
+          {['queued', 'preparing', 'planning', 'building', 'revising', 'rendering', 'queued_building', 'queued_revising', 'queued_rendering'].includes(status) && (
+            <button
+              type="button"
+              onClick={() => handleAction('cancel')}
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100/90 border border-rose-200/80 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+            >
+              <Square className="w-3.5 h-3.5 fill-rose-600 text-rose-600" />
+              <span>{isSubmitting ? 'Stopping…' : 'Stop Agent'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 transition-all shadow-2xs cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5 text-slate-500" />
+            <span>Edit Brief</span>
+          </button>
+        </div>
       </div>
+
+      {/* Cancelled / Stopped / Failed Banner */}
+      {(status === 'cancelled' || status === 'failed') && (
+        <div
+          className={`rounded-3xl p-6 shadow-xs border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300 ${
+            status === 'cancelled'
+              ? 'bg-amber-50/70 border-amber-200/80 text-amber-950'
+              : 'bg-rose-50/70 border-rose-200/80 text-rose-950'
+          }`}
+        >
+          <div className="flex items-start gap-3.5">
+            <div
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${
+                status === 'cancelled'
+                  ? 'bg-amber-100 border-amber-200 text-amber-700'
+                  : 'bg-rose-100 border-rose-200 text-rose-700'
+              }`}
+            >
+              {status === 'cancelled' ? <StopCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-base">
+                {status === 'cancelled' ? 'Agent Generation Stopped' : 'Generation Halted'}
+              </h3>
+              <p
+                className={`text-xs mt-0.5 max-w-xl leading-relaxed ${
+                  status === 'cancelled' ? 'text-amber-800/80' : 'text-rose-800/80'
+                }`}
+              >
+                {status === 'cancelled'
+                  ? 'You paused this run. You can change your prompt, adjust or remove the website URL to create a purely text-driven video, or restart whenever ready.'
+                  : error || 'An error occurred during agent processing. You can adjust the brief or retry cleanly.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#00C2FF]" />
+              <span>Edit Brief & Restart</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAction('restart')}
+              disabled={isSubmitting}
+              className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                status === 'cancelled'
+                  ? 'border-amber-300 text-amber-900'
+                  : 'border-rose-300 text-rose-900'
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Restart As-Is</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* HeyGen Capsule Progress Bar */}
       <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
@@ -568,6 +701,162 @@ export default function ProjectLiveTracker({
           {briefMarkdown || 'Loading brief...'}
         </pre>
       </div>
+
+      {/* Edit Brief Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200/90 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[#00B4D8]" />
+                <h3 className="font-display font-bold text-lg text-slate-900">
+                  Edit Video Brief & Prompt
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Target URL */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Target Website URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={editUrl}
+                onChange={(e) => setEditUrl(e.target.value)}
+                placeholder="https://yourproduct.com (or leave blank for pure text prompt)"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                Leave blank or remove URL if you want the agent to build based purely on your custom prompt without scraping.
+              </p>
+            </div>
+
+            {/* Custom Prompt / Key Message */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Custom Instructions & Prompt
+              </label>
+              <textarea
+                rows={4}
+                value={editKeyMessage}
+                onChange={(e) => setEditKeyMessage(e.target.value)}
+                placeholder="E.g., Create a high-energy 30-second promo for our AI editor. Highlight speed, show code snippets, use dark mode with purple accents, female voiceover..."
+                className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all resize-y"
+              />
+            </div>
+
+            {/* Style Preset & Duration */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Style Preset
+                </label>
+                <select
+                  value={editStylePreset}
+                  onChange={(e) => setEditStylePreset(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all"
+                >
+                  <option value="auto">Auto AI Match</option>
+                  <option value="coral">Coral (Linear Style)</option>
+                  <option value="punchy">Punchy (Vibrant & Bold)</option>
+                  <option value="mono">Monochrome (Dark Minimal)</option>
+                  <option value="technical">Technical (Developer)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Duration
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(['30s', '45s', '60s'] as const).map((len) => (
+                    <button
+                      key={len}
+                      type="button"
+                      onClick={() => setEditLength(len)}
+                      className={`py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                        editLength === len
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {len}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Voice & Intent */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Voice Narration
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {(['female', 'male'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setEditVoice(v)}
+                      className={`py-1.5 text-xs font-semibold rounded-lg border capitalize transition-all cursor-pointer ${
+                        editVoice === v
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Intent Mode
+                </label>
+                <select
+                  value={editIntent}
+                  onChange={(e) => setEditIntent(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all"
+                >
+                  <option value="promote">Promote Product</option>
+                  <option value="show_site">Show Site As-Is</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAction('edit_brief')}
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#00C2FF]" />
+                <span>{isSubmitting ? 'Saving & Starting…' : 'Save & Start Agent'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

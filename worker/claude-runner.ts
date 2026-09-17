@@ -57,14 +57,12 @@ export function runClaudeHeadless(options: ClaudeRunOptions): Promise<ClaudeRunR
     const logPath = path.join(logsDir, `run-${kind}.jsonl`);
     const logStream = fs.createWriteStream(logPath, { flags: 'a', encoding: 'utf8' });
 
-    const args: string[] = [
-      '-p',
-      prompt,
+    const args = [
+      '--print',
       '--output-format',
       'stream-json',
       '--verbose',
-      '--permission-mode',
-      'bypassPermissions',
+      '--dangerously-skip-permissions',
     ];
 
     if (resumeSessionId) {
@@ -100,6 +98,11 @@ export function runClaudeHeadless(options: ClaudeRunOptions): Promise<ClaudeRunR
       },
     });
 
+    if (child.stdin) {
+      child.stdin.write(prompt + '\n');
+      child.stdin.end();
+    }
+
     let totalCostUsd = 0;
     let inputTokens = 0;
     let outputTokens = 0;
@@ -118,6 +121,21 @@ export function runClaudeHeadless(options: ClaudeRunOptions): Promise<ClaudeRunR
         spawn('taskkill', ['/PID', child.pid.toString(), '/T', '/F'], { shell: true });
       }
     }, timeoutMs);
+
+    // Realtime cancellation watchdog (checks every 1s if user clicked Stop)
+    const cancelCheckInterval = setInterval(() => {
+      try {
+        const currentJob = db.prepare("SELECT status FROM jobs WHERE id = ?").get(jobId) as any;
+        if (currentJob?.status === 'cancelled') {
+          clearInterval(cancelCheckInterval);
+          clearTimeout(timeoutTimer);
+          errorMsg = 'Job was cancelled by user.';
+          if (child.pid) {
+            spawn('taskkill', ['/PID', child.pid.toString(), '/T', '/F'], { shell: true });
+          }
+        }
+      } catch {}
+    }, 1000);
 
     if (child.stdout) {
       const rl = readline.createInterface({ input: child.stdout });
@@ -170,7 +188,13 @@ export function runClaudeHeadless(options: ClaudeRunOptions): Promise<ClaudeRunR
             payloadText = `Running tool: ${parsed.tool_use?.name || parsed.name || 'action'}`;
           } else if (parsed.type === 'message' || parsed.type === 'assistant') {
             eventType = 'step';
-            payloadText = typeof parsed.content === 'string' ? parsed.content.slice(0, 300) : 'Generating content...';
+            
+            if (parsed.message?.content && Array.isArray(parsed.message.content)) {
+              const textChunk = parsed.message.content.find((c: any) => c.type === 'text');
+              payloadText = textChunk ? textChunk.text.slice(0, 300) : 'Generating content...';
+            } else {
+              payloadText = typeof parsed.content === 'string' ? parsed.content.slice(0, 300) : 'Generating content...';
+            }
           } else if (parsed.type === 'error') {
             eventType = 'error';
             payloadText = parsed.error || 'Agent error';
@@ -228,6 +252,7 @@ export function runClaudeHeadless(options: ClaudeRunOptions): Promise<ClaudeRunR
 
     child.on('close', (code) => {
       clearTimeout(timeoutTimer);
+      clearInterval(cancelCheckInterval);
       logStream.end();
 
       // Record run completion event
