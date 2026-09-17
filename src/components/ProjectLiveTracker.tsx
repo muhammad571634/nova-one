@@ -224,6 +224,30 @@ const PROMPT_IDEAS = [
   },
 ];
 
+// Formats frame type into a concise, professional badge (e.g. "01 · Hook", "07 · CTA")
+function formatRoleLabel(type?: string, fallbackRole?: string, cardId: string = '01'): string {
+  if (type) {
+    const map: Record<string, string> = {
+      hook: 'Hook',
+      intro: 'Intro',
+      product_intro: 'Intro',
+      feature: 'Feature',
+      feature_showcase: 'Feature',
+      benefits: 'Benefits',
+      benefit_highlight: 'Benefits',
+      proof: 'Proof',
+      cta: 'CTA',
+    };
+    const mapped = map[type.toLowerCase().trim()];
+    if (mapped) return `${cardId} · ${mapped}`;
+  }
+  if (fallbackRole) {
+    const cleanRole = fallbackRole.replace(/^\d+\s*·\s*/, '').trim();
+    return `${cardId} · ${cleanRole}`;
+  }
+  return `${cardId} · Scene`;
+}
+
 interface MilestoneState {
   step: 'setup' | 'capture' | 'design' | 'storyboard' | 'building' | 'render' | 'ready';
   percentage: number;
@@ -389,16 +413,21 @@ export default function ProjectLiveTracker({
     ? slug.split('-')[0].charAt(0).toUpperCase() + slug.split('-')[0].slice(1)
     : 'Product';
 
-  // Helper to parse seconds from string like "0:00 - 0:08 (8s)" or "8s"
+  // Helper to parse seconds from string like "0:00 - 0:08 (8s)", "8s", or decimal "6.243s"
   const parseDurationSeconds = (raw: string): number => {
     if (!raw) return 6;
-    const match = raw.match(/(\d+)s/);
-    if (match) return parseInt(match[1], 10);
+    const match = raw.match(/([\d.]+)\s*s\b/i);
+    if (match) {
+      const sec = parseFloat(match[1]);
+      if (!isNaN(sec) && sec > 0) return Math.round(sec);
+    }
     const rangeMatch = raw.match(/:(\d{2})\s*-\s*\d+:(\d{2})/);
     if (rangeMatch) {
       const diff = parseInt(rangeMatch[2], 10) - parseInt(rangeMatch[1], 10);
       if (diff > 0) return diff;
     }
+    const plainNum = parseFloat(raw);
+    if (!isNaN(plainNum) && plainNum > 0) return Math.round(plainNum);
     return 6;
   };
 
@@ -573,12 +602,14 @@ export default function ProjectLiveTracker({
         const preset = TEMPLATE_PRESETS[idx % TEMPLATE_PRESETS.length];
         const cardId = String(fr.id).padStart(2, '0');
         const dur = frameSeconds[cardId] ?? parseDurationSeconds(fr.duration);
+        const roleLabel = formatRoleLabel(fr.type, preset.role, cardId);
         return {
           id: cardId,
           numericId: fr.id,
           templateTitle: preset.templateTitle,
           sceneTitle: fr.title || (typeof preset.defaultTitle === 'function' ? preset.defaultTitle(brandName) : preset.defaultTitle),
-          role: fr.scene ? `${cardId} · ${fr.scene}` : preset.role,
+          role: roleLabel,
+          sceneDescription: fr.scene || '',
           vo: fr.voiceover || (typeof preset.defaultVo === 'function' ? preset.defaultVo(brandName) : preset.defaultVo),
           dur,
           image: preset.image,
@@ -595,6 +626,7 @@ export default function ProjectLiveTracker({
           templateTitle: t.templateTitle,
           sceneTitle: title,
           role: t.role,
+          sceneDescription: '',
           vo,
           dur,
           image: t.image,
@@ -954,15 +986,19 @@ export default function ProjectLiveTracker({
               {/* Multi-stop Gradient Vignette */}
               <div className="canvas-card-gradient" />
 
-              {/* Top Left Title */}
-              <h3 className="canvas-card-title">
-                {displayTitle}
+              {/* Top Left Title & Clean Badge */}
+              <div className="canvas-card-title">
+                <div className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight text-white line-clamp-1 drop-shadow-md">
+                  {displayTitle}
+                </div>
                 {!isTemplate && (
-                  <span className="canvas-card-sub">
-                    {item.role} · {item.dur}s
-                  </span>
+                  <div className="canvas-card-sub text-xs sm:text-[13px] font-semibold text-white/90 mt-1 flex items-center gap-1.5 drop-shadow-sm">
+                    <span>{item.role}</span>
+                    <span className="text-white/40">·</span>
+                    <span className="font-mono text-cyan-300 font-bold">{item.dur}s</span>
+                  </div>
                 )}
-              </h3>
+              </div>
 
               {/* Top Right Comment Badge */}
               {hasComment && (
@@ -1035,6 +1071,21 @@ export default function ProjectLiveTracker({
                       ✕
                     </button>
                   </div>
+
+                  {/* Scene Visual Direction (from STORYBOARD.md) */}
+                  {item.sceneDescription && (
+                    <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3 shrink-0">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Scene Visuals & Direction
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-slate-700 leading-relaxed pl-2.5 border-l-2 border-slate-300">
+                        {item.sceneDescription}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Voiceover Script */}
                   <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3 shrink-0">
