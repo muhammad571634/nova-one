@@ -52,6 +52,26 @@ export default async function ProjectDetailPage(props: {
     }
   }
 
+  // Query render records and agent runs for metrics & preview
+  const rawRenderRecord = db.prepare(
+    'SELECT * FROM renders WHERE job_id = ? ORDER BY started_at DESC LIMIT 1'
+  ).get(job.id) as any;
+
+  const rawAgentRuns = db.prepare(
+    'SELECT * FROM agent_runs WHERE job_id = ? ORDER BY started_at ASC'
+  ).all(job.id) as any[];
+
+  // Convert SQLite null-prototype objects to plain JS objects for RSC serialization
+  const renderRecord = rawRenderRecord ? { ...rawRenderRecord } : null;
+  const agentRuns = (rawAgentRuns || []).map((r) => ({ ...r }));
+
+  const mp4Path = path.join(job.project_dir, 'renders', 'video.mp4');
+  const hasRenderedVideo = fs.existsSync(mp4Path);
+  const videoSizeBytes = hasRenderedVideo ? fs.statSync(mp4Path).size : 0;
+
+  const contactSheetPath = path.join(job.project_dir, 'snapshots', 'contact-sheet.jpg');
+  const hasContactSheet = fs.existsSync(contactSheetPath);
+
   return (
     <ProjectLiveTracker
       jobId={job.id}
@@ -61,6 +81,11 @@ export default async function ProjectDetailPage(props: {
       briefConfig={briefConfig}
       briefMarkdown={briefMarkdown}
       initialStoryboard={storyboard}
+      hasRenderedVideo={hasRenderedVideo}
+      videoSizeBytes={videoSizeBytes}
+      hasContactSheet={hasContactSheet}
+      renderRecord={renderRecord || null}
+      agentRuns={agentRuns || []}
     />
   );
 }

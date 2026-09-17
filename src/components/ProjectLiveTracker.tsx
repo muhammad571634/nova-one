@@ -31,7 +31,11 @@ import {
   Maximize2,
   ArrowRight,
   Globe,
-  Volume2
+  Volume2,
+  Share2,
+  Copy,
+  CheckCheck,
+  Zap
 } from 'lucide-react';
 import { ParsedStoryboard } from '@/lib/storyboard-parser';
 
@@ -205,6 +209,11 @@ interface ProjectLiveTrackerProps {
   briefConfig: any;
   briefMarkdown: string;
   initialStoryboard?: ParsedStoryboard | null;
+  hasRenderedVideo?: boolean;
+  videoSizeBytes?: number;
+  hasContactSheet?: boolean;
+  renderRecord?: any;
+  agentRuns?: any[];
 }
 
 export default function ProjectLiveTracker({
@@ -215,8 +224,14 @@ export default function ProjectLiveTracker({
   briefConfig,
   briefMarkdown,
   initialStoryboard,
+  hasRenderedVideo = false,
+  videoSizeBytes = 0,
+  hasContactSheet = false,
+  renderRecord = null,
+  agentRuns = [],
 }: ProjectLiveTrackerProps) {
   const [status, setStatus] = useState(initialStatus);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<MilestoneState>({
     step: 'setup',
@@ -333,6 +348,20 @@ export default function ProjectLiveTracker({
     }
     return 6;
   };
+
+  const formatBytes = (bytes?: number): string => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const totalCostUsd = agentRuns.reduce((acc, run) => acc + (run.total_cost_usd || 0), 0);
+  const totalTokens = agentRuns.reduce(
+    (acc, run) => acc + ((run.input_tokens || 0) + (run.output_tokens || 0) + (run.cache_read_tokens || 0)),
+    0
+  );
 
   const handleDurationDelta = (cardId: string, currentSeconds: number, delta: number) => {
     const updated = Math.max(1, Math.min(30, currentSeconds + delta));
@@ -604,23 +633,41 @@ export default function ProjectLiveTracker({
             </button>
           )}
 
-          {/* Primary Action Button (Morphs to Send Comments if comments exist) */}
+          {/* Primary Action Button (Morphs to Render, Send Comments, or Approve & Build) */}
           <button
             type="button"
             onClick={() => {
-              if (commentCount > 0) {
+              if (status === 'awaiting_render') {
+                handleAction('render');
+              } else if (status === 'done') {
+                const downloadUrl = `/api/jobs/${jobId}/files/renders/video.mp4?download=true`;
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = 'video.mp4';
+                a.click();
+              } else if (commentCount > 0) {
                 handleAction('revise');
               } else {
                 handleAction('build');
               }
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || status === 'rendering' || status === 'queued_rendering'}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2B59FF] to-[#1A46E8] hover:from-[#1A46E8] hover:to-[#0F35C8] shadow-[0_6px_20px_rgba(43,89,255,0.32)] transition-all cursor-pointer disabled:opacity-50"
           >
-            <Check className="w-4 h-4" />
+            {status === 'done' ? (
+              <Download className="w-4 h-4" />
+            ) : status === 'awaiting_render' ? (
+              <Play className="w-4 h-4 fill-white" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
             <span>
               {isSubmitting
                 ? 'Processing…'
+                : status === 'awaiting_render'
+                ? 'Render Video (MP4)'
+                : status === 'done'
+                ? 'Download MP4'
                 : commentCount > 0
                 ? `Send ${commentCount} comment${commentCount > 1 ? 's' : ''}`
                 : 'Approve & build'}
@@ -998,51 +1045,235 @@ export default function ProjectLiveTracker({
         })}
       </div>
 
-      {/* RENDER / READY SECTION (When pipeline finishes) */}
+      {/* RENDER / REVIEW / READY SECTION (Phase F6 Complete Implementation) */}
       {['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
-        <div className="rounded-3xl bg-white border border-slate-200/80 p-8 shadow-sm flex flex-col items-center justify-center space-y-5 text-center my-6">
-          <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">
-            <Film className="w-7 h-7 text-[#0096C7]" />
-          </div>
-          <div>
-            <h2 className="font-display font-extrabold text-2xl text-slate-900">
-              {status === 'done' ? 'Video Ready!' : 'Video Timeline Assembled'}
-            </h2>
-            <p className="text-slate-500 mt-1 max-w-md mx-auto text-xs">
-              {status === 'done'
-                ? 'Your video has been rendered to 1080p MP4. You can preview or download below.'
-                : 'The agent has built the timeline frames. Click below to render the final video.'}
-            </p>
-          </div>
-
+        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm my-6 transition-all">
+          {/* 1. REVIEW / AWAITING RENDER STATE */}
           {status === 'awaiting_render' && (
-            <button
-              onClick={() => handleAction('render')}
-              disabled={isSubmitting}
-              className="px-7 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <Check className="w-4 h-4 text-emerald-400" />
-              <span>{isSubmitting ? 'Queueing...' : 'Render Video (MP4)'}</span>
-            </button>
-          )}
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Timeline Composed &amp; Checks Passed</span>
+              </div>
 
-          {(status === 'queued_rendering' || status === 'rendering') && (
-            <div className="flex items-center gap-2 text-[#0096C7] font-semibold text-xs">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Rendering video... this will take ~30 seconds.</span>
+              <div>
+                <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                  Ready to Render Your Launch Video
+                </h2>
+                <p className="text-slate-500 mt-2 max-w-lg mx-auto text-xs sm:text-sm leading-relaxed">
+                  All {cardItems.length} scenes, synchronized voiceover tracks, and animated typography transitions have been verified. Click below to compile your production 1080p MP4.
+                </p>
+              </div>
+
+              {/* Contact sheet snapshot preview if generated */}
+              {hasContactSheet && (
+                <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-slate-200 bg-slate-950/90 shadow-md group relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/jobs/${jobId}/files/snapshots/contact-sheet.jpg`}
+                    alt="Timeline Contact Sheet Preview"
+                    className="w-full max-h-72 object-contain mx-auto"
+                  />
+                  <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md text-[11px] font-mono text-slate-300">
+                    Contact Sheet Preview
+                  </div>
+                </div>
+              )}
+
+              {/* Render CTA Bar */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleAction('render')}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Play className="w-4 h-4 fill-white text-white" />
+                  <span>{isSubmitting ? 'Queueing Render…' : 'Render Video (1080p MP4)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Adjust Settings</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-4 text-[11px] text-slate-400 font-mono">
+                <span>Output: {editAspect}</span>
+                <span>•</span>
+                <span>Quality: 1080p High</span>
+                <span>•</span>
+                <span>Est. Time: ~30s</span>
+              </div>
             </div>
           )}
 
+          {/* 2. RENDERING PROGRESS STATE */}
+          {(status === 'queued_rendering' || status === 'rendering') && (
+            <div className="flex flex-col items-center text-center py-8 space-y-6">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-200/80 flex items-center justify-center shadow-md">
+                  <Loader2 className="w-8 h-8 text-[#0096C7] animate-spin" />
+                </div>
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#00B4D8]" />
+                </span>
+              </div>
+
+              <div>
+                <h2 className="font-display font-extrabold text-2xl text-slate-900">
+                  Rendering 1080p Launch Video…
+                </h2>
+                <p className="text-slate-500 mt-1.5 max-w-md mx-auto text-xs leading-relaxed">
+                  Compiling composition frames, rasterizing motion graphic assets, and encoding video stream with FFmpeg.
+                </p>
+              </div>
+
+              {/* Animated Progress Bar */}
+              <div className="w-full max-w-md bg-slate-100 h-2.5 rounded-full overflow-hidden relative shadow-inner">
+                <div className="h-full bg-gradient-to-r from-[#00C2FF] via-[#0077B6] to-[#0096C7] rounded-full animate-pulse w-3/4 transition-all duration-700" />
+              </div>
+
+              <span className="font-mono text-xs text-slate-400">
+                Processing render on local worker · ~25–40s
+              </span>
+            </div>
+          )}
+
+          {/* 3. DONE / VIDEO PLAYER STATE */}
           {status === 'done' && (
-            <a
-              href={`/api/jobs/${jobId}/files/renders/video.mp4`}
-              target="_blank"
-              download
-              className="px-7 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-all flex items-center gap-2"
-            >
-              <Download className="w-4 h-4 text-slate-500" />
-              Download MP4
-            </a>
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="font-display font-extrabold text-xl text-slate-900">
+                      Video Rendered Successfully
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      1080p MP4 ready for preview, sharing, and download.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href={`/api/jobs/${jobId}/files/renders/video.mp4?download=true`}
+                    download
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span>Download MP4</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}/api/jobs/${jobId}/files/renders/video.mp4`;
+                      navigator.clipboard.writeText(url);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                  >
+                    {copiedLink ? (
+                      <>
+                        <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-600">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={`/api/jobs/${jobId}/files/renders/video.mp4`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Open in Tab</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAction('render')}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Re-render</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Video Player Display */}
+              <div className="flex justify-center py-2">
+                <div
+                  className={`w-full overflow-hidden rounded-2xl bg-black border border-slate-800 shadow-2xl relative ${
+                    editAspect === '9:16'
+                      ? 'max-w-xs aspect-[9/16]'
+                      : editAspect === '1:1'
+                      ? 'max-w-md aspect-square'
+                      : 'max-w-3xl aspect-video'
+                  }`}
+                >
+                  <video
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-contain"
+                    src={`/api/jobs/${jobId}/files/renders/video.mp4`}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+
+              {/* Video Metrics & Economics (PLAN.md § 6.3) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 text-left">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Duration</div>
+                  <div className="font-display font-extrabold text-base text-slate-900 mt-0.5">
+                    {totalDurationSec} seconds
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 text-left">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aspect &amp; Quality</div>
+                  <div className="font-display font-extrabold text-base text-slate-900 mt-0.5">
+                    {editAspect} · 1080p
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 text-left">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">File Size</div>
+                  <div className="font-display font-extrabold text-base text-slate-900 mt-0.5">
+                    {formatBytes(videoSizeBytes || renderRecord?.size_bytes)}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 text-left">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <span>AI Cost</span>
+                    <Zap className="w-3 h-3 text-amber-500" />
+                  </div>
+                  <div className="font-display font-extrabold text-base text-slate-900 mt-0.5 font-mono">
+                    ${totalCostUsd.toFixed(3)}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}

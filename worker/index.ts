@@ -96,15 +96,38 @@ async function processNextJob() {
       if (!fs.existsSync(job.project_dir)) {
         fs.mkdirSync(job.project_dir, { recursive: true });
       }
+
       const hyperframesJson = path.join(job.project_dir, 'hyperframes.json');
-      if (!fs.existsSync(hyperframesJson)) {
+      const nestedMyVideo = path.join(job.project_dir, 'my-video');
+
+      // If a previous init created a nested my-video subfolder, promote its files to project root
+      if (!fs.existsSync(hyperframesJson) && fs.existsSync(nestedMyVideo)) {
+        try {
+          const nestedFiles = fs.readdirSync(nestedMyVideo);
+          for (const file of nestedFiles) {
+            const src = path.join(nestedMyVideo, file);
+            const dest = path.join(job.project_dir, file);
+            if (!fs.existsSync(dest)) {
+              fs.renameSync(src, dest);
+            }
+          }
+        } catch (err: any) {
+          console.warn(`[Job ${job.id}] Notice promoting nested my-video files: ${err.message}`);
+        }
+      }
+
+      if (!fs.existsSync(path.join(job.project_dir, 'hyperframes.json'))) {
         console.log(`[Job ${job.id}] Initializing HyperFrames project in ${job.project_dir}`);
         try {
-          execSync('npx hyperframes@0.8.46 init', { cwd: job.project_dir, stdio: 'pipe' });
+          execSync('npx hyperframes@0.8.46 init . --non-interactive --skill=product-launch-video', {
+            cwd: job.project_dir,
+            stdio: 'pipe',
+          });
         } catch (err: any) {
           console.warn(`[Job ${job.id}] Init notice: ${err.message}`);
         }
       }
+
       const sourceBrief = path.join(job.job_dir, 'BRIEF.md');
       const targetBrief = path.join(job.project_dir, 'BRIEF.md');
       if (fs.existsSync(sourceBrief)) {
@@ -122,9 +145,39 @@ async function processNextJob() {
           cwd: job.project_dir,
           stdio: 'inherit'
         });
-        
+
+        const mp4Path = path.join(job.project_dir, 'renders', 'video.mp4');
+        let sizeBytes = 0;
+        if (fs.existsSync(mp4Path)) {
+          sizeBytes = fs.statSync(mp4Path).size;
+        }
+        const runEndTime = new Date().toISOString();
+        const renderId = crypto.randomUUID();
+
+        // Record in renders table
+        db.prepare(`
+          INSERT INTO renders (id, job_id, path, duration_s, size_bytes, quality, started_at, ended_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(renderId, job.id, mp4Path, null, sizeBytes, 'high', runStartTime, runEndTime);
+
+        // Record in credit ledger
+        const ledgerId = crypto.randomUUID();
+        db.prepare(`
+          INSERT INTO credit_ledger (id, user_id, delta, reason, job_id, ts)
+          VALUES (?, ?, -1, 'Video Render (1080p)', ?, ?)
+        `).run(ledgerId, job.user_id, job.id, runEndTime);
+
+        // Record completion event
+        db.prepare(`
+          INSERT INTO job_events (id, job_id, ts, type, payload_json)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(crypto.randomUUID(), job.id, runEndTime, 'status_change', JSON.stringify({
+          status: 'done',
+          text: 'Video rendered successfully.'
+        }));
+
         // Final completion state
-        db.prepare("UPDATE jobs SET status = 'done', updated_at = ? WHERE id = ?").run(new Date().toISOString(), job.id);
+        db.prepare("UPDATE jobs SET status = 'done', updated_at = ? WHERE id = ?").run(runEndTime, job.id);
       } catch (err: any) {
         throw new Error(`Render failed: ${err.message}`);
       }
