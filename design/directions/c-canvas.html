@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Nova One · C · Canvas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Geist:wght@500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Geist:wght@500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="thumbs.css">
 <style>
   :root {
     --bg: #F7F8FA; --surface: #FFFFFF; --ink: #0E1116; --muted: #5F6878; --faint: #98A0AE;
-    --line: #E8EBF0; --accent: #2B59FF; --accent-soft: #EDF1FF; --ok: #12A56B;
+    --line: #E8EBF0; --accent: #2B59FF; --accent-hover: #1A46E8; --accent-soft: #EEF2FF; --ok: #12A56B;
     --display: "Plus Jakarta Sans", "Bricolage Grotesque", system-ui, sans-serif;
     --sans: "Onest", system-ui, sans-serif;
-    --r: 16px; --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.04);
+    --r: 18px; --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.04);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
@@ -23,11 +23,11 @@
 
   .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
   .side { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; height: 100vh; }
-  .logo { display: flex; align-items: center; gap: 10px; font: 700 20px/1 var(--display); letter-spacing: -0.02em; padding: 4px 8px; }
+  .logo { display: flex; align-items: center; gap: 10px; font: 800 22px/1 var(--display); letter-spacing: -0.025em; padding: 4px 8px; }
   .logo i { width: 26px; height: 26px; border-radius: 8px; background: conic-gradient(from 200deg, var(--accent), #7FA0FF, var(--accent)); }
-  .create { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 11px; font-weight: 600; }
+  .create { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 11px; font-weight: 700; }
   .nav { display: grid; gap: 2px; }
-  .nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 500; }
+  .nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 600; }
   .nav a:hover { background: var(--bg); color: var(--ink); }
   .nav a.on { background: var(--accent-soft); color: var(--accent); }
   .recent { font-size: 12px; color: var(--faint); padding: 0 10px; margin-top: 8px; }
@@ -36,37 +36,37 @@
 
   main { padding: 28px clamp(16px, 4vw, 48px) 150px; max-width: 1240px; width: 100%; min-width: 0; }
   .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
-  .crumb { font-size: 13px; color: var(--faint); margin-bottom: 6px; }
-  h1 { font: 700 clamp(28px, 3.2vw, 36px)/1.1 var(--display); letter-spacing: -0.025em; margin: 0; }
-  .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; font-weight: 500; color: var(--accent); background: var(--accent-soft); padding: 5px 12px 5px 10px; border-radius: 999px; }
+  .crumb { font-size: 13px; color: var(--faint); margin-bottom: 6px; font-weight: 500; }
+  h1 { font: 800 clamp(28px, 3.2vw, 36px)/1.1 var(--display); letter-spacing: -0.03em; margin: 0; color: var(--ink); }
+  .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 5px 12px 5px 10px; border-radius: 999px; }
   .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(43,89,255,.2); }
   .btns { display: flex; gap: 8px; }
-  .btn { border: 0; border-radius: 12px; padding: 11px 18px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
-  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 6px 20px rgba(43,89,255,.28); }
-  .btn.primary:hover { background: #2049E6; }
+  .btn { border: 0; border-radius: 12px; padding: 11px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: all .18s ease; }
+  .btn.primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); color: #fff; box-shadow: 0 6px 20px rgba(43,89,255,.32); }
+  .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(43,89,255,.4); }
   .btn.soft { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
 
-  .progress { display: flex; gap: 8px; margin: 24px 0; overflow-x: auto; }
-  .progress span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--faint); background: var(--surface); border: 1px solid var(--line); padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
-  .progress .done { color: var(--ok); } .progress .done svg { width: 14px; height: 14px; }
-  .progress .now { color: #fff; background: var(--ink); border-color: var(--ink); }
+  .progress { display: flex; gap: 8px; margin: 24px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .progress span { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--faint); background: var(--surface); border: 1px solid var(--line); padding: 6px 14px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+  .progress .done { color: var(--ok); border-color: rgba(18,165,107,.25); background: #F0FDF4; } .progress .done svg { width: 14px; height: 14px; }
+  .progress .now { color: #fff; background: var(--ink); border-color: var(--ink); box-shadow: 0 4px 12px rgba(14,17,22,.15); }
 
-  .summary { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 28px; }
+  .summary { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow); }
   .summary > div { background: var(--surface); padding: 20px 22px; }
-  .k { font-size: 12px; font-weight: 500; color: var(--faint); margin-bottom: 8px; }
-  .big { font: 600 20px/1.3 var(--display); letter-spacing: -0.015em; margin: 0; }
-  .facts { display: grid; gap: 4px; font-size: 14px; } .facts span { color: var(--muted); }
+  .k { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-bottom: 8px; }
+  .big { font: 700 20px/1.3 var(--display); letter-spacing: -0.015em; margin: 0; color: var(--ink); }
+  .facts { display: grid; gap: 4px; font-size: 14px; font-weight: 500; } .facts span { color: var(--muted); }
   .pal { display: flex; gap: 8px; } .pal i { width: 36px; height: 36px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
 
-  /* Grid header with switcher */
+  /* Grid header */
   .gridhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
-  .gridhead h2 { font: 700 20px/1 var(--display); margin: 0; letter-spacing: -0.02em; }
+  .gridhead h2 { font: 800 22px/1 var(--display); margin: 0; letter-spacing: -0.025em; }
   .gridhead .meta-wrap { display: flex; align-items: center; gap: 12px; }
-  .gridhead span.count { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .gridhead span.count { font-size: 13px; color: var(--muted); font-weight: 600; }
   
-  .view-toggle { display: inline-flex; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .view-toggle button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; color: var(--muted); transition: all .15s ease; cursor: pointer; }
-  .view-toggle button.active { background: var(--ink); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+  .view-toggle { display: inline-flex; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+  .view-toggle button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; color: var(--muted); transition: all .18s ease; cursor: pointer; }
+  .view-toggle button.active { background: var(--ink); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 
   /* 3-column Card Grid matching Image 2 */
   .grid {
@@ -75,22 +75,22 @@
     gap: 20px;
   }
   @media (max-width: 1100px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
   }
   @media (max-width: 680px) {
-    .grid { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: 1fr; gap: 16px; }
   }
 
-  /* 1:1 Card matching Image 2 */
+  /* 1:1 Card matching Image 2 with Auto-Expanding Height when Open */
   .card {
     position: relative;
     aspect-ratio: 16 / 9.6;
-    border-radius: 20px;
+    border-radius: 22px;
     overflow: hidden;
     background: #181A20;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, min-height 0.3s ease;
     cursor: pointer;
     user-select: none;
     display: flex;
@@ -100,6 +100,15 @@
     transform: translateY(-4px);
     box-shadow: 0 18px 38px -8px rgba(0, 0, 0, 0.22);
     border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* When card is open, remove fixed aspect-ratio so content never overflows or pushes up */
+  .card.open {
+    aspect-ratio: auto;
+    min-height: 400px;
+    box-shadow: 0 24px 54px -12px rgba(15, 23, 42, 0.25);
+    border-color: rgba(43, 89, 255, 0.35);
+    transform: none;
   }
 
   /* Card media background */
@@ -112,7 +121,7 @@
     object-position: center;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .card:hover .card-img {
+  .card:hover:not(.open) .card-img {
     transform: scale(1.03);
   }
 
@@ -122,7 +131,7 @@
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.58) 0%,
       rgba(0, 0, 0, 0.12) 40%,
       rgba(0, 0, 0, 0.06) 55%,
       rgba(0, 0, 0, 0.65) 100%
@@ -130,17 +139,8 @@
     pointer-events: none;
     transition: background 0.3s ease;
   }
-  .card:hover .card-gradient {
-    background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.62) 0%,
-      rgba(0, 0, 0, 0.18) 40%,
-      rgba(0, 0, 0, 0.12) 55%,
-      rgba(0, 0, 0, 0.72) 100%
-    );
-  }
 
-  /* Top Left Title */
+  /* Top Left Title - Bold Marketing Style */
   .card-title {
     position: absolute;
     top: 22px;
@@ -157,8 +157,6 @@
     z-index: 2;
     pointer-events: none;
   }
-
-  /* Subtitle for scene mode */
   .card-sub {
     font-size: 13px;
     font-weight: 600;
@@ -177,8 +175,8 @@
     backdrop-filter: blur(10px);
     color: #fff;
     font-size: 11.5px;
-    font-weight: 600;
-    padding: 4px 10px;
+    font-weight: 700;
+    padding: 4px 11px;
     border-radius: 999px;
     display: none;
     align-items: center;
@@ -208,7 +206,7 @@
     color: #FFFFFF;
     font-family: var(--sans);
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -217,7 +215,7 @@
   .card-btn .arr {
     font-size: 15px;
     line-height: 1;
-    font-weight: 700;
+    font-weight: 800;
     transition: transform 0.2s ease;
   }
   .card-btn:hover {
@@ -229,119 +227,293 @@
     transform: translateX(2px);
   }
 
-  /* Interactive Drawer for scene feedback / comments */
+  /* =================================================================
+     NEW: LIGHT, SOFT, BOLD MARKETING POPUP / DRAWER
+     ================================================================= */
   .card-drawer {
     position: absolute;
     inset: 0;
-    background: rgba(14, 17, 22, 0.94);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    padding: 20px 22px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     z-index: 10;
     opacity: 0;
     pointer-events: none;
     transform: translateY(12px);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9);
+    border-radius: 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .card.open .card-drawer {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
   }
+
+  /* Custom Clean Scrollbar so content never clips */
+  .card-drawer::-webkit-scrollbar {
+    width: 6px;
+  }
+  .card-drawer::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .card-drawer::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 999px;
+  }
+
+  /* Drawer Header */
   .drawer-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #fff;
+    flex-shrink: 0;
+  }
+  .drawer-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .drawer-head h4 {
     margin: 0;
-    font-size: 15px;
+    font: 800 17px/1.2 var(--display);
+    color: #0E1116;
+    letter-spacing: -0.02em;
+  }
+  .drawer-dur-chip {
+    font-size: 11.5px;
     font-weight: 700;
-    color: #fff;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 9px;
+    border-radius: 999px;
   }
   .drawer-close {
-    background: rgba(255, 255, 255, 0.15);
+    background: #F1F5F9;
     border: 0;
-    color: #fff;
-    width: 26px;
-    height: 26px;
+    color: #475569;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: grid;
     place-items: center;
     cursor: pointer;
     font-size: 14px;
-    transition: background .15s ease;
+    font-weight: 700;
+    transition: all .15s ease;
+    flex-shrink: 0;
   }
   .drawer-close:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: #E2E8F0;
+    color: #0F172A;
+    transform: scale(1.05);
   }
+
+  /* Voiceover Box - Soft Light Aesthetic */
   .drawer-vo {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 13px;
-    color: #DDE2EC;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 11px 13px;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: flex-start;
+    flex-shrink: 0;
   }
-  .drawer-vo svg {
+  .drawer-vo-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent-soft);
     color: var(--accent);
-    width: 14px;
-    height: 14px;
-    margin-top: 2px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .drawer-vo-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .drawer-vo-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .drawer-vo-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748B;
+    margin-bottom: 2px;
+    display: block;
+  }
+  .drawer-vo-quote {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: #1E293B;
+    margin: 0;
+  }
+
+  /* Comment Area - Expands Downward with Scroll */
+  .drawer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-height: 100px;
+  }
+  .drawer-field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: -0.01em;
   }
   .drawer-textarea {
-    flex: 1;
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    padding: 10px 12px;
-    color: #fff;
+    min-height: 85px;
+    flex: 1;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 12px;
+    padding: 11px 13px;
+    color: #0F172A;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.5;
     outline: none;
-    resize: none;
+    resize: vertical;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.03);
+    transition: border-color .18s ease, box-shadow .18s ease;
   }
   .drawer-textarea:focus {
     border-color: var(--accent);
-    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3.5px rgba(43, 89, 255, 0.15);
+  }
+  .drawer-textarea::placeholder {
+    color: #94A3B8;
+  }
+
+  /* Drawer Actions */
+  .drawer-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .drawer-cancel {
+    background: none;
+    border: 0;
+    color: #64748B;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .drawer-cancel:hover {
+    color: #0F172A;
+    background: #F1F5F9;
   }
   .drawer-save {
-    align-self: flex-end;
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     border: 0;
-    border-radius: 8px;
-    padding: 7px 14px;
+    border-radius: 10px;
+    padding: 9px 18px;
     color: #fff;
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: 13.5px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background .15s ease;
+    box-shadow: 0 4px 14px rgba(43, 89, 255, 0.35);
+    transition: all .18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .drawer-save:hover {
-    background: #2049E6;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(43, 89, 255, 0.45);
   }
 
   /* Floating composer */
   .composer { position: fixed; left: calc(248px + (100vw - 248px) / 2); transform: translateX(-50%); bottom: 64px; width: min(720px, calc(100vw - 248px - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 40px rgba(16,24,40,.12); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; z-index: 50; }
   .composer svg { color: var(--accent); }
   .composer input { flex: 1; border: 0; outline: none; font: inherit; background: none; min-width: 0; }
-  .composer .btn { padding: 9px 14px; }
+  .composer .btn { padding: 9px 16px; font-weight: 700; }
 
+  /* =================================================================
+     MOBILE RESPONSIVENESS (PHONES & TABLETS)
+     ================================================================= */
   @media (max-width: 900px) {
     .app { grid-template-columns: 1fr; }
     .side { position: static; height: auto; flex-direction: row; align-items: center; padding: 12px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
     .nav, .recent, .usage { display: none; } .create { margin-left: auto; padding: 9px 14px; }
     .summary { grid-template-columns: 1fr; }
     .btns { width: 100%; } .btns .btn { flex: 1; justify-content: center; }
-    .composer { left: 50%; width: calc(100vw - 32px); }
+    .composer { left: 50%; width: calc(100vw - 28px); bottom: 18px; }
+    main { padding: 20px 14px 130px; }
+  }
+
+  @media (max-width: 600px) {
+    .head h1 { font-size: 26px; }
+    .card {
+      border-radius: 18px;
+    }
+    .card-title {
+      font-size: 22px;
+      top: 18px;
+      left: 18px;
+    }
+    .card-btn {
+      bottom: 16px;
+      left: 18px;
+      padding: 7px 15px;
+      font-size: 13px;
+    }
+    /* Expand open card so virtual keyboard & long text never push anything out */
+    .card.open {
+      min-height: 420px;
+    }
+    .card-drawer {
+      padding: 16px;
+      gap: 10px;
+    }
+    .drawer-head h4 {
+      font-size: 16px;
+    }
+    .drawer-vo {
+      padding: 10px 12px;
+      gap: 8px;
+    }
+    .drawer-vo-quote {
+      font-size: 13px;
+    }
+    .drawer-textarea {
+      min-height: 95px;
+      font-size: 14px;
+    }
+    .drawer-actions {
+      width: 100%;
+    }
+    .drawer-save {
+      width: 100%;
+      justify-content: center;
+      padding: 12px;
+      font-size: 14px;
+    }
+    .drawer-cancel {
+      display: none; /* redundant with top close button on mobile */
+    }
   }
 </style>
 </head>
@@ -497,15 +669,32 @@
 
         <div class="card-drawer">
           <div class="drawer-head">
-            <h4>${item.role} · ${item.dur}s</h4>
-            <button class="drawer-close" type="button">✕</button>
+            <div class="drawer-badge-group">
+              <h4>${item.role}</h4>
+              <span class="drawer-dur-chip">${item.dur}s</span>
+            </div>
+            <button class="drawer-close" type="button" title="Close">✕</button>
           </div>
+          
           <div class="drawer-vo">
-            <svg><use href="#i-mic"/></svg>
-            <span>${item.vo}</span>
+            <div class="drawer-vo-icon">
+              <svg><use href="#i-mic"/></svg>
+            </div>
+            <div class="drawer-vo-text">
+              <span class="drawer-vo-label">Voiceover</span>
+              <p class="drawer-vo-quote">"${item.vo}"</p>
+            </div>
           </div>
-          <textarea class="drawer-textarea" placeholder="What should change in this scene?">${comments[item.id] || ""}</textarea>
-          <button class="drawer-save" type="button">Save comment</button>
+
+          <div class="drawer-field">
+            <label class="drawer-field-label">What should change in this scene?</label>
+            <textarea class="drawer-textarea" placeholder="e.g. Make the opening faster, add bolder headline...">${comments[item.id] || ""}</textarea>
+          </div>
+
+          <div class="drawer-actions">
+            <button class="drawer-cancel" type="button">Cancel</button>
+            <button class="drawer-save" type="button">Save comment</button>
+          </div>
         </div>
       </article>`;
     }).join("");
@@ -540,7 +729,7 @@
     const card = e.target.closest(".card");
     if (!card) return;
 
-    if (e.target.closest(".drawer-close")) {
+    if (e.target.closest(".drawer-close") || e.target.closest(".drawer-cancel")) {
       card.classList.remove("open");
       return;
     }
@@ -556,10 +745,17 @@
 
     // Clicking button or card opens the detail drawer
     if (e.target.closest(".card-btn") || (!card.classList.contains("open") && !e.target.closest(".card-drawer"))) {
-      // Close other cards first
+      // Close other open cards
       document.querySelectorAll(".card.open").forEach(c => c !== card && c.classList.remove("open"));
       card.classList.add("open");
-      card.querySelector(".drawer-textarea").focus();
+      const ta = card.querySelector(".drawer-textarea");
+      setTimeout(() => {
+        ta.focus();
+        // Scroll card into view gently if on mobile
+        if (window.innerWidth < 680) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
     }
   });
 
