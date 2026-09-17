@@ -34,7 +34,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { url, intent = 'promote', stylePreset = 'auto', length = '45s', voice = 'female', language = 'en', keyMessage } = body;
+    const {
+      url,
+      intent = 'promote',
+      stylePreset = 'auto',
+      length = '45s',
+      voice = 'female',
+      language = 'en',
+      keyMessage,
+      aspect = '1920x1080',
+      captions = true,
+      brandColor,
+      brandName,
+    } = body;
 
     const hasUrl = typeof url === 'string' && url.trim().length > 0;
     if (hasUrl && !url.trim().startsWith('http://') && !url.trim().startsWith('https://')) {
@@ -59,6 +71,10 @@ export async function POST(request: Request) {
       voice: voice === 'male' ? 'male' : 'female',
       language: typeof language === 'string' ? language : 'en',
       keyMessage: typeof keyMessage === 'string' ? keyMessage.trim() : undefined,
+      aspect,
+      captions: captions !== false,
+      brandColor: typeof brandColor === 'string' && brandColor.trim() ? brandColor.trim() : undefined,
+      brandName: typeof brandName === 'string' && brandName.trim() ? brandName.trim() : undefined,
     };
 
     const briefMarkdown = generateBriefMarkdown(briefConfig);

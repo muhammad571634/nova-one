@@ -35,6 +35,10 @@ export default function NewVideoWizardPage() {
   const [length, setLength] = useState<'30s' | '45s' | '60s'>('45s');
   const [voice, setVoice] = useState<'female' | 'male'>('female');
   const [keyMessage, setKeyMessage] = useState('');
+  const [aspect, setAspect] = useState<'1920x1080' | '1080x1920' | '1080x1080'>('1920x1080');
+  const [captions, setCaptions] = useState<boolean>(true);
+  const [brandColor, setBrandColor] = useState<string>('#2B59FF');
+  const [brandName, setBrandName] = useState<string>('');
 
   // UI States
   const [previewPreset, setPreviewPreset] = useState<StylePreset | null>(null);
@@ -57,6 +61,10 @@ export default function NewVideoWizardPage() {
     voice,
     language: 'en',
     keyMessage,
+    aspect,
+    captions,
+    brandColor,
+    brandName,
   };
 
   const briefMarkdown = generateBriefMarkdown(currentBriefConfig);
@@ -87,6 +95,10 @@ export default function NewVideoWizardPage() {
           voice,
           language: 'en',
           keyMessage,
+          aspect,
+          captions,
+          brandColor,
+          brandName,
         }),
       });
 
@@ -473,6 +485,93 @@ export default function NewVideoWizardPage() {
             <p className="mt-1 text-[11px] text-slate-400">
               Leave empty to let the AI derive the primary value proposition directly from your website.
             </p>
+          </div>
+
+          {/* Aspect Ratio */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <span>Aspect Ratio</span>
+              <span className="text-[11px] text-slate-400 font-normal lowercase">Choose video frame geometry</span>
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { ratio: '1920x1080' as const, label: '16:9 Landscape', sub: 'YouTube, Web & Desktop' },
+                { ratio: '1080x1920' as const, label: '9:16 Portrait', sub: 'TikTok, Reels & Shorts' },
+                { ratio: '1080x1080' as const, label: '1:1 Square', sub: 'Instagram & Feed Posts' },
+              ].map((item) => (
+                <button
+                  key={item.ratio}
+                  type="button"
+                  onClick={() => setAspect(item.ratio)}
+                  className={`py-3 px-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    aspect === item.ratio
+                      ? 'border-[#00B4D8] bg-cyan-50/40 ring-2 ring-[#00C2FF]/20'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-display font-bold text-sm text-slate-900">{item.label}</span>
+                    {aspect === item.ratio && <Check className="w-3.5 h-3.5 text-[#00B4D8]" />}
+                  </div>
+                  <p className="text-[11px] text-slate-500">{item.sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Captions & Brand Token */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Captions Toggle */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Subtitle Captions
+              </label>
+              <button
+                type="button"
+                onClick={() => setCaptions(!captions)}
+                className={`w-full py-3 px-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                  captions
+                    ? 'border-[#00B4D8] bg-cyan-50/40 ring-2 ring-[#00C2FF]/20'
+                    : 'border-slate-200 bg-slate-50/50'
+                }`}
+              >
+                <div>
+                  <div className="font-display font-bold text-sm text-slate-900">
+                    Captions {captions ? 'Enabled' : 'Disabled'}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {captions ? 'Dynamic karaoke subtitles burned into video' : 'No subtitles will be rendered'}
+                  </p>
+                </div>
+                <span className={`text-[11px] font-black px-2 py-0.5 rounded-md ${captions ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>
+                  {captions ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            </div>
+
+            {/* Brand Accent Color */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span>Brand Accent Color</span>
+                <span className="font-mono text-[11px] text-slate-400">{brandColor}</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={brandColor}
+                  onChange={(e) => setBrandColor(e.target.value.toUpperCase())}
+                  className="w-10 h-10 rounded-xl cursor-pointer border border-slate-200 p-0.5"
+                  title="Choose brand color"
+                />
+                <input
+                  type="text"
+                  value={brandColor}
+                  onChange={(e) => setBrandColor(e.target.value)}
+                  className="flex-1 px-3 py-2 text-sm font-mono font-bold rounded-xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:border-sky-500 uppercase"
+                  placeholder="#2B59FF"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Navigation & Submit */}

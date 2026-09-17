@@ -12,7 +12,6 @@ import {
   ChevronUp, 
   MessageSquare, 
   Check, 
-  Mic, 
   FileText, 
   Play, 
   Send,
@@ -26,12 +25,158 @@ import {
   Pencil,
   X,
   StopCircle,
-  Sliders,
-  Plus,
-  Minus,
-  Maximize2
+  Sliders, 
+  Plus, 
+  Minus, 
+  Maximize2,
+  ArrowRight,
+  Globe,
+  Volume2
 } from 'lucide-react';
-import { ParsedStoryboard, StoryboardFrame } from '@/lib/storyboard-parser';
+import { ParsedStoryboard } from '@/lib/storyboard-parser';
+
+// Direction C Canonical Template Showcases (Exact specs from c-canvas.html)
+const TEMPLATE_PRESETS = [
+  {
+    id: '01',
+    templateTitle: 'Ads & Promo',
+    defaultTitle: "Your next demo shouldn't take a day",
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #D47355, #8C3E26)',
+    role: '01 · Hook',
+    defaultVo: "Recording a product demo shouldn't eat your whole afternoon.",
+    defaultDur: 5
+  },
+  {
+    id: '02',
+    templateTitle: 'Educational Video',
+    defaultTitle: 'Slow tools, heavy files, closed platforms',
+    image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #B58A6A, #66432A)',
+    role: '02 · Problem',
+    defaultVo: 'Most screen recorders are slow, bloated, and lock your videos away.',
+    defaultDur: 7
+  },
+  {
+    id: '03',
+    templateTitle: 'Expert Explainer',
+    defaultTitle: (brand: string) => `Meet ${brand}`,
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #3E6B52, #1C3326)',
+    role: '03 · Solution',
+    defaultVo: (brand: string) => `Meet ${brand} — the modern way to build and ship software fast.`,
+    defaultDur: 8
+  },
+  {
+    id: '04',
+    templateTitle: 'Tips & How-To',
+    defaultTitle: 'Stop recording — the link is ready',
+    image: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #A8988A, #574B40)',
+    role: '04 · Feature',
+    defaultVo: 'Hit stop, and your video is instantly ready on your clipboard.',
+    defaultDur: 9
+  },
+  {
+    id: '05',
+    templateTitle: 'News Brief Video',
+    defaultTitle: 'Open source. Your recordings, your storage.',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #2D4D7A, #122135)',
+    role: '05 · Proof',
+    defaultVo: "It's built for speed, security, and total developer control.",
+    defaultDur: 8
+  },
+  {
+    id: '06',
+    templateTitle: 'Video Podcast',
+    defaultTitle: 'Start building for free',
+    image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=1000&q=85',
+    bgFallback: 'linear-gradient(145deg, #282A32, #0E0F12)',
+    role: '06 · CTA',
+    defaultVo: (brand: string) => `Get started with ${brand} today.`,
+    defaultDur: 6
+  }
+];
+
+// HeyGen-Grade Minimalist Vector Icons (Crisp, Bold, Apple/HeyGen aesthetics)
+function HeygenClockIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9.5" />
+      <polyline points="12 6.5 12 12 15.5 13.5" />
+    </svg>
+  );
+}
+
+function HeygenAspectIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="3.5" />
+      <path d="M7 9h2V7" />
+      <path d="M17 9h-2V7" />
+      <path d="M7 15h2v2" />
+      <path d="M17 15h-2v2" />
+    </svg>
+  );
+}
+
+function HeygenCaptionsIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="5.5" width="19" height="13" rx="3.5" />
+      <path d="M8.5 10.5a2 2 0 1 0 0 3" />
+      <path d="M15.5 10.5a2 2 0 1 0 0 3" />
+    </svg>
+  );
+}
+
+function HeygenVoiceIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M19 5a10 10 0 0 1 0 14" />
+    </svg>
+  );
+}
+
+function HeygenStyleIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+      <path d="M20 15l-4.5-4.5a2 2 0 0 0-2.8 0L4 19" />
+    </svg>
+  );
+}
+
+function HeygenTargetIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9.5" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function HeygenPlusIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function HeygenChevronIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
 
 interface MilestoneState {
   step: 'setup' | 'capture' | 'design' | 'storyboard' | 'building' | 'render' | 'ready';
@@ -85,19 +230,100 @@ export default function ProjectLiveTracker({
   });
 
   const [logs, setLogs] = useState<LogEvent[]>([]);
-  const [isLogOpen, setIsLogOpen] = useState(true);
+  const [isLogOpen, setIsLogOpen] = useState(false);
+  const [isBriefOpen, setIsBriefOpen] = useState(false);
   const [storyboard, setStoryboard] = useState<ParsedStoryboard | null>(initialStoryboard || null);
 
-  // Frame comments state: frameId -> string
-  const [comments, setComments] = useState<Record<number, string>>({});
-  const [activeCommentFrame, setActiveCommentFrame] = useState<number | null>(null);
+  // Direction C View Mode: 'templates' | 'scenes'
+  const [currentMode, setCurrentMode] = useState<'templates' | 'scenes'>('scenes');
+
+  // Direction C Comments State: cardId -> comment text
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [draftComments, setDraftComments] = useState<Record<string, string>>({});
+  const [openCardId, setOpenCardId] = useState<string | null>(null);
+
+  // Floating Composer Global Input
+  const [globalFeedback, setGlobalFeedback] = useState('');
+
+  // Frame custom durations state: cardId -> number (seconds)
+  const [frameSeconds, setFrameSeconds] = useState<Record<string, number>>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Frame custom durations state: frameId -> number (seconds)
-  const [frameSeconds, setFrameSeconds] = useState<Record<number, number>>({});
+  // Edit Brief Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editUrl, setEditUrl] = useState(briefConfig?.url || sourceUrl || '');
+  const [editKeyMessage, setEditKeyMessage] = useState(briefConfig?.keyMessage || '');
+  const [editStylePreset, setEditStylePreset] = useState(briefConfig?.stylePreset || 'auto');
+  const [editLength, setEditLength] = useState(briefConfig?.length || '45s');
+  const [editVoice, setEditVoice] = useState(briefConfig?.voice || 'female');
+  const [editIntent, setEditIntent] = useState(briefConfig?.intent || 'promote');
+  const [editAspect, setEditAspect] = useState<'16:9' | '9:16' | '1:1'>(() => {
+    const raw = briefConfig?.aspect;
+    if (raw === '9:16' || raw === '1080x1920') return '9:16';
+    if (raw === '1:1' || raw === '1080x1080') return '1:1';
+    return '16:9';
+  });
+  const [editCaptions, setEditCaptions] = useState<boolean>(briefConfig?.captions !== false);
+  const [editBrandColor, setEditBrandColor] = useState<string>(briefConfig?.brandColor || '#2B59FF');
+  const [editBrandName, setEditBrandName] = useState<string>(briefConfig?.brandName || '');
+
+  // Dropdown / Popover states for option chips
+  const [isLengthMenuOpen, setIsLengthMenuOpen] = useState(false);
+  const [isAspectMenuOpen, setIsAspectMenuOpen] = useState(false);
+  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
+  const [isBrandSystemOpen, setIsBrandSystemOpen] = useState(false);
+
+  useEffect(() => {
+    if (briefConfig) {
+      if (briefConfig.url !== undefined) setEditUrl(briefConfig.url || sourceUrl || '');
+      if (briefConfig.keyMessage !== undefined) setEditKeyMessage(briefConfig.keyMessage || '');
+      if (briefConfig.stylePreset !== undefined) setEditStylePreset(briefConfig.stylePreset || 'auto');
+      if (briefConfig.length !== undefined) setEditLength(briefConfig.length || '45s');
+      if (briefConfig.voice !== undefined) setEditVoice(briefConfig.voice || 'female');
+      if (briefConfig.intent !== undefined) setEditIntent(briefConfig.intent || 'promote');
+      if (briefConfig.aspect) {
+        setEditAspect(
+          briefConfig.aspect === '9:16' || briefConfig.aspect === '1080x1920'
+            ? '9:16'
+            : briefConfig.aspect === '1:1' || briefConfig.aspect === '1080x1080'
+            ? '1:1'
+            : '16:9'
+        );
+      }
+      if (briefConfig.captions !== undefined) setEditCaptions(briefConfig.captions !== false);
+      if (briefConfig.brandColor) setEditBrandColor(briefConfig.brandColor);
+      if (briefConfig.brandName) setEditBrandName(briefConfig.brandName);
+    }
+  }, [briefConfig, sourceUrl]);
+
+  // Clean industry-standard body scroll lock to prevent background page from scrolling
+  useEffect(() => {
+    if (isEditModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
+    }
+  }, [isEditModalOpen]);
+
+  const logsEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Helper: brand name capitalization
+  const brandName = slug
+    ? slug.split('-')[0].charAt(0).toUpperCase() + slug.split('-')[0].slice(1)
+    : 'Product';
 
   // Helper to parse seconds from string like "0:00 - 0:08 (8s)" or "8s"
   const parseDurationSeconds = (raw: string): number => {
+    if (!raw) return 6;
     const match = raw.match(/(\d+)s/);
     if (match) return parseInt(match[1], 10);
     const rangeMatch = raw.match(/:(\d{2})\s*-\s*\d+:(\d{2})/);
@@ -108,35 +334,18 @@ export default function ProjectLiveTracker({
     return 6;
   };
 
-  const getFrameDuration = (frameId: number, raw: string): number => {
-    if (frameSeconds[frameId] !== undefined) return frameSeconds[frameId];
-    return parseDurationSeconds(raw);
-  };
+  const handleDurationDelta = (cardId: string, currentSeconds: number, delta: number) => {
+    const updated = Math.max(1, Math.min(30, currentSeconds + delta));
+    setFrameSeconds((prev) => ({ ...prev, [cardId]: updated }));
 
-  const handleDurationDelta = (frameId: number, raw: string, delta: number) => {
-    const current = getFrameDuration(frameId, raw);
-    const updated = Math.max(1, Math.min(30, current + delta));
-    setFrameSeconds((prev) => ({ ...prev, [frameId]: updated }));
-
-    // Sync duration request into comments for agent
-    setComments((prev) => {
-      const existing = prev[frameId] || '';
+    // Sync duration delta into draft comments
+    setDraftComments((prev) => {
+      const existing = prev[cardId] || comments[cardId] || '';
       const cleanNote = existing.replace(/\[Duration:\s*\d+s\]\s*/g, '').trim();
       const updatedNote = `[Duration: ${updated}s] ${cleanNote}`.trim();
-      return { ...prev, [frameId]: updatedNote };
+      return { ...prev, [cardId]: updatedNote };
     });
   };
-
-  // Edit Brief Modal State
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editUrl, setEditUrl] = useState(briefConfig?.url || sourceUrl || '');
-  const [editKeyMessage, setEditKeyMessage] = useState(briefConfig?.keyMessage || '');
-  const [editStylePreset, setEditStylePreset] = useState(briefConfig?.stylePreset || 'auto');
-  const [editLength, setEditLength] = useState(briefConfig?.length || '45s');
-  const [editVoice, setEditVoice] = useState(briefConfig?.voice || 'female');
-  const [editIntent, setEditIntent] = useState(briefConfig?.intent || 'promote');
-
-  const logsEndRef = useRef<HTMLDivElement | null>(null);
 
   const handleAction = async (
     action: 'revise' | 'build' | 'render' | 'cancel' | 'restart' | 'edit_brief',
@@ -146,8 +355,14 @@ export default function ProjectLiveTracker({
     try {
       let payload = customPayload;
       if (!payload) {
-        if (action === 'revise') payload = { comments };
-        else if (action === 'edit_brief') {
+        if (action === 'revise') {
+          payload = { 
+            comments: { 
+              ...comments, 
+              ...(globalFeedback.trim() ? { global: globalFeedback.trim() } : {}) 
+            } 
+          };
+        } else if (action === 'edit_brief') {
           payload = {
             url: editUrl,
             keyMessage: editKeyMessage,
@@ -155,6 +370,10 @@ export default function ProjectLiveTracker({
             length: editLength,
             voice: editVoice,
             intent: editIntent,
+            aspect: editAspect === '9:16' ? '1080x1920' : editAspect === '1:1' ? '1080x1080' : '1920x1080',
+            captions: editCaptions,
+            brandColor: editBrandColor,
+            brandName: editBrandName,
           };
         } else {
           payload = {};
@@ -169,7 +388,9 @@ export default function ProjectLiveTracker({
       if (res.ok) {
         if (action === 'revise') {
           setComments({});
-          setActiveCommentFrame(null);
+          setDraftComments({});
+          setGlobalFeedback('');
+          setOpenCardId(null);
         }
         if (action === 'edit_brief') {
           setIsEditModalOpen(false);
@@ -245,8 +466,7 @@ export default function ProjectLiveTracker({
 
   // Dynamic Browser Tab Title
   useEffect(() => {
-    const brandName = slug ? slug.replace(/-/g, ' ').toUpperCase() : 'NOVA ONE';
-    if (status === 'planning') {
+    if (status === 'planning' || status === 'preparing') {
       document.title = `(● ${milestones.percentage}%) Planning ${brandName} · Nova One`;
     } else if (status === 'building' || status === 'queued_building') {
       document.title = `(● ${milestones.percentage}%) Assembling ${brandName} · Nova One`;
@@ -263,106 +483,100 @@ export default function ProjectLiveTracker({
     } else {
       document.title = `${brandName} — Launch Video · Nova One`;
     }
-  }, [status, milestones.percentage, slug]);
+  }, [status, milestones.percentage, brandName]);
 
-  // Determine active capsule stage
-  const capsuleSteps = [
-    { key: 'setup', label: 'Setup', done: milestones.percentage >= 15 || status !== 'queued' },
-    { key: 'capture', label: 'Capture', done: milestones.hasTokens || milestones.percentage >= 30 },
-    { key: 'design', label: 'Design', done: milestones.hasFrame || milestones.percentage >= 45 },
-    { key: 'storyboard', label: 'Storyboard', done: milestones.hasStoryboard || status === 'awaiting_approval' },
-    { key: 'build', label: 'Build', done: status === 'building' || status === 'awaiting_render' || status === 'done' },
-    { key: 'render', label: 'Render', done: status === 'done' },
-  ];
+  // Map Storyboard Frames or Showcase Fallback Cards
+  const cardItems = (storyboard?.frames && storyboard.frames.length > 0)
+    ? storyboard.frames.map((fr, idx) => {
+        const preset = TEMPLATE_PRESETS[idx % TEMPLATE_PRESETS.length];
+        const cardId = String(fr.id).padStart(2, '0');
+        const dur = frameSeconds[cardId] ?? parseDurationSeconds(fr.duration);
+        return {
+          id: cardId,
+          numericId: fr.id,
+          templateTitle: preset.templateTitle,
+          sceneTitle: fr.title || (typeof preset.defaultTitle === 'function' ? preset.defaultTitle(brandName) : preset.defaultTitle),
+          role: fr.scene ? `${cardId} · ${fr.scene}` : preset.role,
+          vo: fr.voiceover || (typeof preset.defaultVo === 'function' ? preset.defaultVo(brandName) : preset.defaultVo),
+          dur,
+          image: preset.image,
+          bgFallback: preset.bgFallback
+        };
+      })
+    : TEMPLATE_PRESETS.map((t) => {
+        const title = typeof t.defaultTitle === 'function' ? t.defaultTitle(brandName) : t.defaultTitle;
+        const vo = typeof t.defaultVo === 'function' ? t.defaultVo(brandName) : t.defaultVo;
+        const dur = frameSeconds[t.id] ?? t.defaultDur;
+        return {
+          id: t.id,
+          numericId: parseInt(t.id, 10),
+          templateTitle: t.templateTitle,
+          sceneTitle: title,
+          role: t.role,
+          vo,
+          dur,
+          image: t.image,
+          bgFallback: t.bgFallback
+        };
+      });
 
-  function getPillClass(st: { key: string; label: string; done: boolean }, index: number) {
-    if (st.done) {
-      return 'bg-cyan-50/80 border border-[#00B4D8] text-[#0096C7] font-bold shadow-2xs';
-    }
-    return 'bg-slate-50/60 text-slate-400 border border-slate-200/60';
-  }
+  const totalDurationSec = cardItems.reduce((acc, c) => acc + c.dur, 0);
+
+  // The One Message
+  const theOneMessage = briefConfig?.keyMessage || storyboard?.message || `Beautiful screen recordings, shared in seconds.`;
+
+  // Brand Palette Swatches (matching Image 2)
+  const paletteSwatches = ['#0E1116', '#F4F5F7', '#2B59FF', '#C9D3E6'];
+
+  // Comments Count (per-scene + global composer)
+  const commentCount = Object.values(comments).filter((v) => v.trim()).length + (globalFeedback.trim() ? 1 : 0);
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-7 pb-28 min-h-screen">
+      {/* Top Header matching c-canvas.html */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
         <div>
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Projects</span>
-          </Link>
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight text-slate-900 capitalize">
-              {slug.replace(/-/g, ' ')} — launch video
-            </h1>
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-2xs border ${
-                status === 'awaiting_approval'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : status === 'failed'
-                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                  : status === 'cancelled'
-                  ? 'bg-amber-50 text-amber-800 border-amber-200'
-                  : 'bg-cyan-50 text-[#0096C7] border-cyan-200'
-              }`}
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  status === 'awaiting_approval'
-                    ? 'bg-emerald-500'
-                    : status === 'failed'
-                    ? 'bg-rose-500'
-                    : status === 'cancelled'
-                    ? 'bg-amber-500'
-                    : 'bg-[#00C2FF] animate-ping'
-                }`}
-              />
-              <span className="capitalize">
-                {status === 'awaiting_approval'
-                  ? 'Storyboard Ready'
-                  : status === 'planning'
-                  ? 'Agent Generating Storyboard…'
-                  : status === 'preparing'
-                  ? 'Worker Initializing…'
-                  : status === 'queued'
-                  ? 'Queued in Worker'
-                  : status === 'cancelled'
-                  ? 'Generation Stopped'
-                  : status === 'failed'
-                  ? 'Generation Failed'
-                  : status}
-              </span>
+          <div className="text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5">
+            <Link href="/projects" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
+              <ArrowLeft className="w-3 h-3" />
+              <span>Projects</span>
+            </Link>
+            <span>/</span>
+            <span className="text-slate-600">{brandName}</span>
+          </div>
+
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-slate-900 leading-tight">
+            {brandName} — <span className="gradient-text">launch video</span>
+          </h1>
+
+          <div className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-[#2B59FF] bg-[#EEF2FF] px-3 py-1 rounded-full border border-blue-100/70 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-[#2B59FF] shadow-[0_0_0_3px_rgba(43,89,255,0.22)]" />
+            <span>
+              {status === 'awaiting_approval'
+                ? 'Your storyboard is ready'
+                : status === 'planning'
+                ? 'Agent generating storyboard…'
+                : status === 'cancelled'
+                ? 'Generation stopped'
+                : status === 'building'
+                ? 'Assembling video…'
+                : status === 'done'
+                ? 'Video ready'
+                : status === 'failed'
+                ? 'Generation failed'
+                : 'Your storyboard is ready'}
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 flex items-center gap-1.5 font-mono">
-            <span>Target:</span>
-            {sourceUrl && sourceUrl !== 'none' ? (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#0096C7] hover:underline inline-flex items-center gap-1"
-              >
-                <span>{sourceUrl}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            ) : (
-              <span className="text-slate-400 italic">Prompt-driven (No website URL)</span>
-            )}
-          </p>
         </div>
 
-        {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5">
-          {['queued', 'preparing', 'planning', 'building', 'revising', 'rendering', 'queued_building', 'queued_revising', 'queued_rendering'].includes(status) && (
+        {/* Action Buttons Top Right */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {['queued', 'preparing', 'planning', 'building', 'revising', 'rendering'].includes(status) && (
             <button
               type="button"
               onClick={() => handleAction('cancel')}
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100/90 border border-rose-200/80 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100/90 border border-rose-200 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <Square className="w-3.5 h-3.5 fill-rose-600 text-rose-600" />
               <span>{isSubmitting ? 'Stopping…' : 'Stop Agent'}</span>
@@ -372,21 +586,56 @@ export default function ProjectLiveTracker({
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 transition-all shadow-2xs cursor-pointer"
           >
             <Pencil className="w-3.5 h-3.5 text-slate-500" />
             <span>Edit Brief</span>
           </button>
+
+          {/* Secondary Approve & Build button if comments are queued */}
+          {commentCount > 0 && (
+            <button
+              type="button"
+              onClick={() => handleAction('build')}
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+            >
+              <span>Approve &amp; build</span>
+            </button>
+          )}
+
+          {/* Primary Action Button (Morphs to Send Comments if comments exist) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (commentCount > 0) {
+                handleAction('revise');
+              } else {
+                handleAction('build');
+              }
+            }}
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2B59FF] to-[#1A46E8] hover:from-[#1A46E8] hover:to-[#0F35C8] shadow-[0_6px_20px_rgba(43,89,255,0.32)] transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Check className="w-4 h-4" />
+            <span>
+              {isSubmitting
+                ? 'Processing…'
+                : commentCount > 0
+                ? `Send ${commentCount} comment${commentCount > 1 ? 's' : ''}`
+                : 'Approve & build'}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Cancelled / Stopped / Failed Banner */}
+      {/* Cancelled / Failed Banner */}
       {(status === 'cancelled' || status === 'failed') && (
         <div
-          className={`rounded-3xl p-6 shadow-xs border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300 ${
+          className={`rounded-3xl p-5 shadow-xs border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300 ${
             status === 'cancelled'
-              ? 'bg-amber-50/70 border-amber-200/80 text-amber-950'
-              : 'bg-rose-50/70 border-rose-200/80 text-rose-950'
+              ? 'bg-amber-50/80 border-amber-200 text-amber-950'
+              : 'bg-rose-50/80 border-rose-200 text-rose-950'
           }`}
         >
           <div className="flex items-start gap-3.5">
@@ -400,115 +649,410 @@ export default function ProjectLiveTracker({
               {status === 'cancelled' ? <StopCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="font-display font-bold text-base">
+              <h3 className="font-display font-bold text-sm">
                 {status === 'cancelled' ? 'Agent Generation Stopped' : 'Generation Halted'}
               </h3>
-              <p
-                className={`text-xs mt-0.5 max-w-xl leading-relaxed ${
-                  status === 'cancelled' ? 'text-amber-800/80' : 'text-rose-800/80'
-                }`}
-              >
+              <p className="text-xs text-slate-600 mt-0.5">
                 {status === 'cancelled'
-                  ? 'You paused this run. You can change your prompt, adjust or remove the website URL to create a purely text-driven video, or restart whenever ready.'
-                  : error || 'An error occurred during agent processing. You can adjust the brief or retry cleanly.'}
+                  ? 'Run is paused. You can review and comment on scenes below, edit instructions, or restart.'
+                  : error || 'An error occurred during agent processing.'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
             >
               <Pencil className="w-3.5 h-3.5 text-[#00C2FF]" />
-              <span>Edit Brief & Restart</span>
+              <span>Edit Brief</span>
             </button>
             <button
               type="button"
               onClick={() => handleAction('restart')}
               disabled={isSubmitting}
-              className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
-                status === 'cancelled'
-                  ? 'border-amber-300 text-amber-900'
-                  : 'border-rose-300 text-rose-900'
-              }`}
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Restart As-Is</span>
+              <span>Restart</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* HeyGen Capsule Progress Bar */}
-      <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-        <div className="grid grid-cols-6 gap-1 sm:gap-2">
-          {capsuleSteps.map((st, idx) => (
-            <div
-              key={st.key}
-              className={`py-2 px-1 text-center rounded-xl text-xs transition-all ${getPillClass(
-                st,
-                idx
-              )}`}
-            >
-              <span className="block sm:hidden">{idx + 1}</span>
-              <span className="hidden sm:inline">{st.label}</span>
+      {/* Capsule Progress Bar matching Image 2 */}
+      <div className="overflow-x-auto pb-1">
+        <div className="canvas-progress">
+          <span className="done">
+            <Check className="w-3.5 h-3.5 text-[#00B4D8]" />
+            <span>Setup</span>
+          </span>
+          <span className="done">
+            <Check className="w-3.5 h-3.5 text-[#00B4D8]" />
+            <span>Capture</span>
+          </span>
+          <span className="done">
+            <Check className="w-3.5 h-3.5 text-[#00B4D8]" />
+            <span>Design</span>
+          </span>
+          <span className="now">
+            <span>Storyboard</span>
+          </span>
+          <span className={status === 'building' || status === 'done' ? 'done' : ''}>
+            {status === 'building' || status === 'done' ? <Check className="w-3.5 h-3.5 text-[#00B4D8]" /> : null}
+            <span>Build</span>
+          </span>
+          <span className={status === 'done' ? 'done' : ''}>
+            {status === 'done' ? <Check className="w-3.5 h-3.5 text-[#00B4D8]" /> : null}
+            <span>Render</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Summary Card with Distinct Vertical Dividers matching c-canvas.html */}
+      <section className="canvas-summary">
+        {/* Column 1: The One Message */}
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            The one message
+          </div>
+          <p className="font-display font-bold text-xl text-slate-900 tracking-tight leading-snug">
+            {theOneMessage}
+          </p>
+        </div>
+
+        {/* Column 2: Video Facts */}
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            Video
+          </div>
+          <div className="space-y-1 text-sm font-semibold text-slate-900 tabular-nums">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span>{totalDurationSec}s</span> <span className="text-slate-500 font-normal">long</span>
+              <span className="text-slate-300">·</span>
+              <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                {briefConfig?.aspect === '9:16' || briefConfig?.aspect === '1080x1920'
+                  ? '9:16'
+                  : briefConfig?.aspect === '1:1' || briefConfig?.aspect === '1080x1080'
+                  ? '1:1'
+                  : '16:9'}
+              </span>
             </div>
-          ))}
+            <div className="capitalize flex items-center gap-1.5 flex-wrap">
+              <span>{briefConfig?.voice || 'Female'}</span> <span className="text-slate-400">·</span> <span>{briefConfig?.language || 'English'}</span>
+              <span className="text-slate-300">·</span>
+              <span
+                className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  briefConfig?.captions !== false
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-slate-100 text-slate-400 border border-slate-200'
+                }`}
+              >
+                {briefConfig?.captions !== false ? 'CC ON' : 'CC OFF'}
+              </span>
+            </div>
+            <div className="capitalize flex items-center gap-1.5">
+              <span>{briefConfig?.stylePreset || 'Auto'} <span className="text-slate-500 font-normal">style</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Brand Palette */}
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+            <span>Brand palette</span>
+            {briefConfig?.brandColor && (
+              <span className="text-sky-600 font-mono text-[10px] font-bold uppercase bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
+                {briefConfig.brandColor}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {briefConfig?.brandColor && !paletteSwatches.includes(briefConfig.brandColor) && (
+              <i
+                className="w-9 h-9 rounded-xl inline-block shadow-inner border-2 border-slate-900 ring-2 ring-slate-900/20"
+                style={{ backgroundColor: briefConfig.brandColor }}
+                title={`Primary Brand Accent: ${briefConfig.brandColor}`}
+              />
+            )}
+            {paletteSwatches.map((hex, i) => (
+              <i
+                key={i}
+                className="w-9 h-9 rounded-xl inline-block shadow-inner border border-slate-200/80"
+                style={{ backgroundColor: hex }}
+                title={hex}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Grid Header & View Toggle matching Image 2 */}
+      <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
+        <h2 className="font-display font-extrabold text-2xl text-slate-900 tracking-tight">
+          Scenes
+        </h2>
+
+        <div className="flex items-center gap-3">
+          <div className="canvas-view-toggle">
+            <button
+              type="button"
+              onClick={() => setCurrentMode('templates')}
+              className={currentMode === 'templates' ? 'active' : ''}
+            >
+              Template Style
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentMode('scenes')}
+              className={currentMode === 'scenes' ? 'active' : ''}
+            >
+              {brandName} Scenes
+            </button>
+          </div>
+
+          <span className="text-xs font-semibold text-slate-500 tabular-nums">
+            {cardItems.length} scenes · {totalDurationSec}s
+          </span>
         </div>
       </div>
 
-      {/* Multi-Column Summary Card */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-xs">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Style Preset
-            </span>
-            <p className="font-display font-bold text-base text-slate-900 capitalize">
-              {briefConfig.stylePreset || 'Auto AI Match'}
-            </p>
-            <span className="text-[11px] text-slate-500 block">13 Verified Showcases</span>
-          </div>
+      {/* 3-Column Card Grid matching Image 2 */}
+      <div className="canvas-grid">
+        {cardItems.map((item) => {
+          const isTemplate = currentMode === 'templates';
+          const displayTitle = isTemplate ? item.templateTitle : item.sceneTitle;
+          const hasComment = Boolean(comments[item.id]);
+          const isOpen = openCardId === item.id;
 
-          <div className="space-y-1 sm:pl-6 pt-4 sm:pt-0">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Target Duration
-            </span>
-            <p className="font-display font-bold text-base text-slate-900 tabular-nums">
-              {briefConfig.length || '45s'}
-            </p>
-            <span className="text-[11px] text-slate-500 block">16:9 Landscape (1080p)</span>
-          </div>
+          return (
+            <article
+              key={item.id}
+              onClick={() => {
+                if (!isOpen) {
+                  setOpenCardId(item.id);
+                  if (!draftComments[item.id] && comments[item.id]) {
+                    setDraftComments((prev) => ({ ...prev, [item.id]: comments[item.id] }));
+                  }
+                }
+              }}
+              className={`canvas-card ${isOpen ? 'open' : ''}`}
+              style={{ background: item.bgFallback }}
+            >
+              {/* Card Image */}
+              <img
+                src={item.image}
+                alt={displayTitle}
+                className="canvas-card-img"
+                loading="lazy"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = 'none';
+                }}
+              />
 
-          <div className="space-y-1 sm:pl-6 pt-4 sm:pt-0">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Voice Narration
-            </span>
-            <p className="font-display font-bold text-base text-slate-900 capitalize">
-              {briefConfig.voice || 'Female'} Voice
-            </p>
-            <span className="text-[11px] text-slate-500 block">HeyGen Studio OAuth</span>
-          </div>
+              {/* Multi-stop Gradient Vignette */}
+              <div className="canvas-card-gradient" />
 
-          <div className="space-y-1 sm:pl-6 pt-4 sm:pt-0">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Intent Mode
-            </span>
-            <p className="font-display font-bold text-base text-slate-900">
-              {briefConfig.intent === 'show_site' ? 'Show Site As-Is' : 'Promote Product'}
-            </p>
-            <span className="text-[11px] text-slate-500 block">Conversion Angle</span>
-          </div>
-        </div>
+              {/* Top Left Title */}
+              <h3 className="canvas-card-title">
+                {displayTitle}
+                {!isTemplate && (
+                  <span className="canvas-card-sub">
+                    {item.role} · {item.dur}s
+                  </span>
+                )}
+              </h3>
+
+              {/* Top Right Comment Badge */}
+              {hasComment && (
+                <span className="canvas-card-comment-badge">
+                  <Check className="w-3 h-3" />
+                  <span>Commented</span>
+                </span>
+              )}
+
+              {/* Bottom Left Frosted Glass Button */}
+              {!isOpen && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenCardId(item.id);
+                    if (!draftComments[item.id] && comments[item.id]) {
+                      setDraftComments((prev) => ({ ...prev, [item.id]: comments[item.id] }));
+                    }
+                  }}
+                  className="canvas-card-btn"
+                >
+                  <span className="text-xs font-semibold">
+                    {isTemplate ? 'View Style' : hasComment ? 'Edit Comment' : 'Edit Scene'}
+                  </span>
+                  <span className="text-sm font-extrabold">›</span>
+                </button>
+              )}
+
+              {/* Expanding Soft Light Agency Card Drawer */}
+              {isOpen && (
+                <div
+                  className="canvas-card-drawer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Drawer Header */}
+                  <div className="flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-display font-extrabold text-base text-slate-900">
+                        {item.role}
+                      </h4>
+                      {/* Duration Chip with +/- controls */}
+                      <div className="inline-flex items-center gap-1 bg-[#EEF2FF] border border-blue-100 rounded-full px-2 py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => handleDurationDelta(item.id, item.dur, -1)}
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-blue-700 hover:bg-blue-100 transition-colors"
+                          title="Reduce 1s"
+                        >
+                          <Minus className="w-2.5 h-2.5" />
+                        </button>
+                        <span className="text-xs font-bold text-[#2B59FF] tabular-nums font-mono px-0.5">
+                          {item.dur}s
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDurationDelta(item.id, item.dur, 1)}
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-blue-700 hover:bg-blue-100 transition-colors"
+                          title="Add 1s"
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOpenCardId(null)}
+                      className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Voiceover Script */}
+                  <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3 shrink-0">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2B59FF]/70" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        Voiceover Script
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-800 leading-relaxed italic pl-2.5 border-l-2 border-slate-200">
+                      &ldquo;{item.vo}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Comment Textarea */}
+                  <div className="flex flex-col gap-1.5 flex-1 min-h-[90px]">
+                    <label className="text-xs font-bold text-slate-700">
+                      What should change in this scene?
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={draftComments[item.id] ?? comments[item.id] ?? ''}
+                      onChange={(e) =>
+                        setDraftComments({ ...draftComments, [item.id]: e.target.value })
+                      }
+                      placeholder="e.g. Make the opening faster, add bolder headline..."
+                      className="w-full flex-1 p-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2B59FF]/20 focus:border-[#2B59FF] resize-y"
+                    />
+                  </div>
+
+                  {/* Drawer Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setOpenCardId(null)}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const val = (draftComments[item.id] ?? comments[item.id] ?? '').trim();
+                        setComments((prev) => {
+                          const updated = { ...prev };
+                          if (val) updated[item.id] = val;
+                          else delete updated[item.id];
+                          return updated;
+                        });
+                        setOpenCardId(null);
+                      }}
+                      className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2B59FF] to-[#1A46E8] shadow-sm hover:from-[#1A46E8] hover:to-[#0F35C8] transition-all cursor-pointer"
+                    >
+                      Save comment
+                    </button>
+                  </div>
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
 
-      {/* Live Agent Terminal / Activity Drawer */}
-      <div className="rounded-3xl border border-slate-200/90 bg-slate-900 text-slate-200 overflow-hidden shadow-md">
+      {/* RENDER / READY SECTION (When pipeline finishes) */}
+      {['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
+        <div className="rounded-3xl bg-white border border-slate-200/80 p-8 shadow-sm flex flex-col items-center justify-center space-y-5 text-center my-6">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">
+            <Film className="w-7 h-7 text-[#0096C7]" />
+          </div>
+          <div>
+            <h2 className="font-display font-extrabold text-2xl text-slate-900">
+              {status === 'done' ? 'Video Ready!' : 'Video Timeline Assembled'}
+            </h2>
+            <p className="text-slate-500 mt-1 max-w-md mx-auto text-xs">
+              {status === 'done'
+                ? 'Your video has been rendered to 1080p MP4. You can preview or download below.'
+                : 'The agent has built the timeline frames. Click below to render the final video.'}
+            </p>
+          </div>
+
+          {status === 'awaiting_render' && (
+            <button
+              onClick={() => handleAction('render')}
+              disabled={isSubmitting}
+              className="px-7 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span>{isSubmitting ? 'Queueing...' : 'Render Video (MP4)'}</span>
+            </button>
+          )}
+
+          {(status === 'queued_rendering' || status === 'rendering') && (
+            <div className="flex items-center gap-2 text-[#0096C7] font-semibold text-xs">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Rendering video... this will take ~30 seconds.</span>
+            </div>
+          )}
+
+          {status === 'done' && (
+            <a
+              href={`/api/jobs/${jobId}/files/renders/video.mp4`}
+              target="_blank"
+              download
+              className="px-7 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-all flex items-center gap-2"
+            >
+              <Download className="w-4 h-4 text-slate-500" />
+              Download MP4
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Diagnostics: Collapsible Live Agent Stream Drawer */}
+      <div className="rounded-3xl border border-slate-200/90 bg-slate-900 text-slate-200 overflow-hidden shadow-xs mt-8">
         <button
           type="button"
           onClick={() => setIsLogOpen(!isLogOpen)}
-          className="w-full flex items-center justify-between px-6 py-3.5 bg-slate-950/80 border-b border-slate-800 text-left hover:bg-slate-950 transition-colors"
+          className="w-full flex items-center justify-between px-6 py-3.5 bg-slate-950/80 border-b border-slate-800 text-left hover:bg-slate-950 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <Terminal className="w-4 h-4 text-[#00C2FF]" />
@@ -520,17 +1064,17 @@ export default function ProjectLiveTracker({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
             <span>{logs.length} events</span>
             {isLogOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </button>
 
         {isLogOpen && (
-          <div className="p-4 max-h-64 overflow-y-auto font-mono text-xs space-y-1.5 bg-slate-900/95 scrollbar-thin">
+          <div className="p-4 max-h-60 overflow-y-auto font-mono text-xs space-y-1.5 bg-slate-900/95 scrollbar-thin">
             {logs.length === 0 ? (
               <p className="text-slate-500 italic py-2">
-                Worker is waiting or initializing Claude Code runner…
+                Worker is ready or waiting for the next job command…
               </p>
             ) : (
               logs.map((lg) => (
@@ -558,345 +1102,176 @@ export default function ProjectLiveTracker({
         )}
       </div>
 
-      {/* RENDER / RESULT SECTION */}
-      {['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
-        <div className="rounded-3xl bg-white border border-slate-200/80 p-8 shadow-sm flex flex-col items-center justify-center space-y-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">
-            <Film className="w-8 h-8 text-[#0096C7]" />
-          </div>
-          <div>
-            <h2 className="font-display font-extrabold text-2xl text-slate-900">
-              {status === 'done' ? 'Video Ready!' : 'Video Assembled'}
-            </h2>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">
-              {status === 'done' 
-                ? 'Your video has been successfully rendered. You can preview or download it now.'
-                : 'The agent has finished building the timeline. Render the final MP4 video to proceed.'}
-            </p>
-          </div>
-          
-          {status === 'awaiting_render' && (
-            <button
-              onClick={() => handleAction('render')}
-              disabled={isSubmitting}
-              className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
-            >
-              <Check className="w-5 h-5 text-emerald-400" />
-              <span>{isSubmitting ? 'Queueing...' : 'Render Video (MP4)'}</span>
-            </button>
-          )}
-
-          {(status === 'queued_rendering' || status === 'rendering') && (
-            <div className="flex items-center gap-3 text-[#0096C7] font-semibold font-display">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Rendering video... this may take a few minutes.</span>
-            </div>
-          )}
-
-          {status === 'done' && (
-            <a
-              href={`/api/jobs/${jobId}/files/renders/video.mp4`}
-              target="_blank"
-              download
-              className="px-8 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold transition-all flex items-center gap-2"
-            >
-              <Download className="w-5 h-5 text-slate-400" />
-              Download MP4
-            </a>
-          )}
-        </div>
-      )}
-
-      {/* STORYBOARD SECTION — REVEALED WHEN READY! */}
-      {storyboard && storyboard.frames && storyboard.frames.length > 0 && !['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
-        <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#00B4D8]" />
-                <h2 className="font-display font-extrabold text-2xl text-slate-900 tracking-tight">
-                  Generated Storyboard & Scene Flow
-                </h2>
-              </div>
-              <p className="mt-1 text-sm text-slate-500">
-                {storyboard.message || 'Review each beat, spoken dialogue, and motion outline before building.'}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            {status === 'awaiting_approval' && (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleAction('revise')}
-                  disabled={isSubmitting || Object.keys(comments).length === 0}
-                  className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-xs flex items-center gap-2 disabled:opacity-50"
-                >
-                  <MessageSquare className="w-4 h-4 text-slate-400" />
-                  <span>{isSubmitting ? 'Sending...' : 'Send Comments'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAction('build')}
-                  disabled={isSubmitting}
-                  className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4 text-[#00C2FF]" />
-                  <span>{isSubmitting ? 'Building...' : 'Approve & Build Video'}</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Grid of Frame Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {storyboard.frames.map((fr) => {
-              const hasComment = Boolean(comments[fr.id]);
-              const isOpen = activeCommentFrame === fr.id;
-
-              return (
-                <div
-                  key={fr.id}
-                  className="rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between"
-                >
-                  {/* Card Header & Scene */}
-                  <div className="p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold font-display uppercase tracking-wider text-[#0096C7] bg-cyan-50 border border-cyan-200 px-2.5 py-0.5 rounded-full">
-                        Frame {fr.id}
-                      </span>
-                      
-                      {/* Quick Duration +/- Controls */}
-                      <div className="flex items-center gap-1 bg-slate-100/90 rounded-xl p-0.5 border border-slate-200/90">
-                        {status === 'awaiting_approval' && (
-                          <button
-                            type="button"
-                            onClick={() => handleDurationDelta(fr.id, fr.duration, -1)}
-                            className="w-5 h-5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-all text-xs font-bold cursor-pointer"
-                            title="Decrease duration by 1s"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                        )}
-                        <span className="text-xs font-semibold text-slate-700 tabular-nums px-1.5 font-mono">
-                          {getFrameDuration(fr.id, fr.duration)}s
-                        </span>
-                        {status === 'awaiting_approval' && (
-                          <button
-                            type="button"
-                            onClick={() => handleDurationDelta(fr.id, fr.duration, 1)}
-                            className="w-5 h-5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-all text-xs font-bold cursor-pointer"
-                            title="Increase duration by 1s"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 16:9 Video Canvas Wireframe */}
-                    <div className="relative aspect-video w-full rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 border border-slate-700/50 overflow-hidden p-3 flex flex-col justify-between shadow-inner select-none">
-                      {/* Grid background / subtle composition guides */}
-                      <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:12px_12px] opacity-35 pointer-events-none" />
-                      <div className="absolute inset-2 border border-dashed border-slate-700/30 rounded-xl pointer-events-none" />
-
-                      {/* Top Bar inside frame */}
-                      <div className="relative z-10 flex items-center justify-between">
-                        <span className="font-mono text-[9px] text-cyan-400 bg-slate-950/80 px-1.5 py-0.5 rounded border border-cyan-500/20 backdrop-blur-xs">
-                          1080p · Beat {fr.id}
-                        </span>
-                        <span className="font-mono text-[9px] text-slate-300 bg-slate-950/60 px-1.5 py-0.5 rounded backdrop-blur-xs">
-                          {getFrameDuration(fr.id, fr.duration)}s
-                        </span>
-                      </div>
-
-                      {/* Center Composition Preview: typography mockup or scene cue */}
-                      <div className="relative z-10 text-center px-3 py-1 space-y-1 my-auto">
-                        <div className="w-12 h-1 mx-auto bg-gradient-to-r from-transparent via-[#00C2FF]/60 to-transparent rounded-full" />
-                        <p className="font-display font-bold text-xs text-slate-100 tracking-tight line-clamp-1 drop-shadow-sm">
-                          {fr.title}
-                        </p>
-                        <p className="text-[10px] text-slate-400 line-clamp-1 italic font-mono">
-                          {fr.voiceover ? `"${fr.voiceover.slice(0, 42)}..."` : 'Visual transition beat'}
-                        </p>
-                      </div>
-
-                      {/* Bottom Safe Area / Progress marker */}
-                      <div className="relative z-10 flex items-center justify-between text-[9px] text-slate-400">
-                        <span className="flex items-center gap-1 font-mono text-[9px] text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>16:9 Canvas</span>
-                        </span>
-                        <span className="font-mono text-[9px] text-slate-400">
-                          Motion Layer
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="font-display font-bold text-base text-slate-900 leading-snug">
-                      {fr.title}
-                    </h3>
-
-                    {/* Scene Description */}
-                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                      {fr.scene}
-                    </p>
-
-                    {/* Voiceover Bubble */}
-                    <div className="p-3.5 rounded-2xl bg-cyan-50/30 border border-cyan-100/80 space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <Mic className="w-3.5 h-3.5 text-[#00B4D8]" />
-                        <span>Voiceover:</span>
-                      </div>
-                      <p className="text-xs text-slate-700 italic leading-relaxed">
-                        &ldquo;{fr.voiceover}&rdquo;
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Soft Light Agency Comment Drawer (Per User Specification) */}
-                  {status === 'awaiting_approval' && (
-                    <div className="border-t border-slate-100 bg-slate-50/50 p-3.5">
-                      {isOpen ? (
-                        <div className="space-y-2.5">
-                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                            Feedback on Frame {fr.id}
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={comments[fr.id] || ''}
-                            onChange={(e) =>
-                              setComments({ ...comments, [fr.id]: e.target.value })
-                            }
-                            placeholder="Change wording, adjust speed, or swap image..."
-                            className="w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] resize-y min-h-[70px] max-h-[160px]"
-                          />
-                          <div className="flex items-center justify-between">
-                            <button
-                              type="button"
-                              onClick={() => setActiveCommentFrame(null)}
-                              className="text-xs text-slate-500 hover:text-slate-800"
-                            >
-                              Done
-                            </button>
-                            <span className="text-[10px] text-slate-400">
-                              Saved in memory
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setActiveCommentFrame(fr.id)}
-                          className="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-600 transition-colors flex items-center justify-between"
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{hasComment ? 'Edit Feedback' : 'Add Note / Comment'}</span>
-                          </span>
-                          {hasComment && (
-                            <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* BRIEF.md Inspection Drawer */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-xs space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* Diagnostics: Collapsible BRIEF.md Inspector */}
+      <div className="rounded-3xl bg-white border border-slate-200/80 overflow-hidden shadow-xs">
+        <button
+          type="button"
+          onClick={() => setIsBriefOpen(!isBriefOpen)}
+          className="w-full flex items-center justify-between px-6 py-3.5 bg-slate-50/70 text-left hover:bg-slate-100/70 transition-colors cursor-pointer"
+        >
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#00B4D8]" />
-            <h3 className="font-display font-bold text-sm text-slate-900">
-              Workspace Contract (BRIEF.md)
+            <h3 className="font-display font-bold text-xs text-slate-800">
+              Workspace Brief Contract (BRIEF.md)
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-slate-500">videos/{slug}/BRIEF.md</span>
-        </div>
-        <pre className="font-mono text-xs text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-200/60 whitespace-pre-wrap overflow-x-auto leading-relaxed max-h-60">
-          {briefMarkdown || 'Loading brief...'}
-        </pre>
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span className="font-mono text-[11px]">videos/{slug}/BRIEF.md</span>
+            {isBriefOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </div>
+        </button>
+
+        {isBriefOpen && (
+          <pre className="font-mono text-xs text-slate-700 bg-white p-5 border-t border-slate-100 whitespace-pre-wrap overflow-x-auto leading-relaxed max-h-56">
+            {briefMarkdown || 'Loading brief...'}
+          </pre>
+        )}
       </div>
 
-      {/* Edit Brief Modal */}
+      {/* Direction C Fixed Floating Composer matching Image 2 */}
+      <div className="canvas-composer">
+        <Sparkles className="w-4 h-4 text-[#2B59FF] shrink-0" />
+        <input
+          type="text"
+          value={globalFeedback}
+          onChange={(e) => setGlobalFeedback(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && globalFeedback.trim()) {
+              handleAction('revise');
+            }
+          }}
+          placeholder="Describe a change to the whole plan — e.g. “make it more playful”"
+          className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 font-sans min-w-0"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (globalFeedback.trim()) {
+              handleAction('revise');
+            }
+          }}
+          disabled={!globalFeedback.trim() || isSubmitting}
+          className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2B59FF] to-[#1A46E8] hover:from-[#1A46E8] hover:to-[#0F35C8] transition-all shadow-sm cursor-pointer disabled:opacity-50"
+        >
+          Send
+        </button>
+      </div>
+
+      {/* HeyGen-Style Edit Brief Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200/90 space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-[#00B4D8]" />
-                <h3 className="font-display font-bold text-lg text-slate-900">
-                  Edit Video Brief & Prompt
-                </h3>
-              </div>
+        <div
+          className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 overscroll-contain animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsEditModalOpen(false);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-[32px] max-w-2xl w-full shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 overscroll-contain"
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              if (!target.closest('.relative')) {
+                setIsBrandSystemOpen(false);
+                setIsAspectMenuOpen(false);
+                setIsLengthMenuOpen(false);
+                setIsStyleMenuOpen(false);
+              }
+            }}
+          >
+            
+            {/* 1. Thematic Hero Image Banner with Gradient Fade (Matching HeyGen) */}
+            <div className="relative h-36 sm:h-44 shrink-0 overflow-hidden bg-slate-900">
+              <img
+                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+                alt="Launch Video Banner"
+                className="w-full h-full object-cover object-center opacity-85"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-black/30" />
+
+              {/* Close Button Top Right */}
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-900/85 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-xs"
+                title="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
-            </div>
 
-            {/* Target URL */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Target Website URL (Optional)
-              </label>
-              <input
-                type="url"
-                value={editUrl}
-                onChange={(e) => setEditUrl(e.target.value)}
-                placeholder="https://yourproduct.com (or leave blank for pure text prompt)"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all font-mono"
-              />
-              <p className="text-[11px] text-slate-500">
-                Leave blank or remove URL if you want the agent to build based purely on your custom prompt without scraping.
-              </p>
-            </div>
-
-            {/* Custom Prompt / Key Message */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Custom Instructions & Prompt
-                </label>
-                <span
-                  className={`text-[10px] font-mono tabular-nums ${
-                    editKeyMessage.length > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'
-                  }`}
-                >
-                  {editKeyMessage.length} / 500
-                </span>
+              {/* Banner Title & Subtitle */}
+              <div className="absolute bottom-3.5 left-7 right-7">
+                <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight leading-tight">
+                  Launch Video Brief
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5 line-clamp-1">
+                  Make any product easier to launch with a short, step-by-step video story.
+                </p>
               </div>
-              <textarea
-                rows={4}
-                maxLength={500}
-                value={editKeyMessage}
-                onChange={(e) => setEditKeyMessage(e.target.value)}
-                placeholder="E.g., Create a high-energy 30-second promo for our AI editor. Highlight speed, show code snippets, use dark mode with purple accents, female voiceover..."
-                className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all resize-y"
-              />
+            </div>
 
-              {/* Prompt Inspiration Chips */}
-              <div className="pt-1 space-y-1.5">
-                <span className="text-[10px] font-medium text-slate-400 block">
-                  Quick Ideas (click to append):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
+            {/* 2. Scrollable Modal Content */}
+            <div
+              className="p-7 pb-24 overflow-y-auto overscroll-contain space-y-6 scrollbar-thin"
+              onScroll={() => {
+                if (isBrandSystemOpen) setIsBrandSystemOpen(false);
+                if (isAspectMenuOpen) setIsAspectMenuOpen(false);
+                if (isLengthMenuOpen) setIsLengthMenuOpen(false);
+                if (isStyleMenuOpen) setIsStyleMenuOpen(false);
+              }}
+            >
+              
+              {/* Section 1: Video Details (Textarea + Inside Script Writer Pill) */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[15px] font-bold text-slate-900">
+                    Video Details
+                  </label>
+                  <span
+                    className={`text-xs font-mono tabular-nums ${
+                      editKeyMessage.length > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'
+                    }`}
+                  >
+                    {editKeyMessage.length} / 500
+                  </span>
+                </div>
+
+                <div className="relative rounded-2xl border-2 border-sky-300 focus-within:border-[#00B4D8] focus-within:ring-4 focus-within:ring-[#00B4D8]/10 bg-white transition-all shadow-xs overflow-hidden">
+                  <textarea
+                    rows={4}
+                    maxLength={500}
+                    value={editKeyMessage}
+                    onChange={(e) => setEditKeyMessage(e.target.value)}
+                    placeholder="Type your script or a prompt for me to generate one for you"
+                    className="w-full p-4 pb-14 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none bg-transparent leading-relaxed"
+                  />
+
+                  {/* Inside-bottom: Script Writer pill button matching HeyGen */}
+                  <div className="absolute bottom-3 left-3.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const polished = editKeyMessage.trim()
+                          ? `Create a snappy, high-converting launch video for ${brandName}. Focus on: ${editKeyMessage.trim()}. Keep pacing brisk, highlight key value props, and end with a crisp call to action.`
+                          : `Create a fast-paced, cinematic launch video for ${brandName}. Highlight modern developer experience, fast workflows, and frictionless collaboration.`;
+                        setEditKeyMessage(polished.slice(0, 500));
+                      }}
+                      className="px-3.5 py-1.5 rounded-full bg-[#F1F5F9] hover:bg-[#E2E8F0] text-slate-800 text-xs font-bold border border-slate-200/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#00B4D8]" />
+                      <span>Script Writer</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Prompt Inspiration Chips */}
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <span className="text-xs text-slate-400 font-medium mr-1">Ideas:</span>
                   {[
                     'Dark mode & neon glow',
-                    'No scraping, pure typography',
                     'Fast-paced & punchy cuts',
+                    'No scraping, pure typography',
                     'Explain features step-by-step',
-                    'Cinematic developer aesthetics',
                   ].map((chip) => (
                     <button
                       key={chip}
@@ -909,115 +1284,402 @@ export default function ProjectLiveTracker({
                           return `${trimmed}. ${chip}`;
                         });
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-cyan-50 hover:text-[#0096C7] hover:border-cyan-200 border border-slate-200/80 text-[11px] text-slate-600 font-medium transition-all cursor-pointer shadow-2xs"
+                      className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 font-medium transition-colors cursor-pointer border border-slate-200/60"
                     >
                       + {chip}
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Style Preset & Duration */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Style Preset
+              {/* Target Website URL (Optional) */}
+              <div className="space-y-2">
+                <label className="text-[15px] font-bold text-slate-900 block">
+                  Target Website URL <span className="text-slate-400 font-normal text-xs lowercase">(optional)</span>
                 </label>
-                <select
-                  value={editStylePreset}
-                  onChange={(e) => setEditStylePreset(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all"
-                >
-                  <option value="auto">Auto AI Match</option>
-                  <option value="coral">Coral (Linear Style)</option>
-                  <option value="punchy">Punchy (Vibrant & Bold)</option>
-                  <option value="mono">Monochrome (Dark Minimal)</option>
-                  <option value="technical">Technical (Developer)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Duration
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {(['30s', '45s', '60s'] as const).map((len) => (
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 focus-within:border-[#00B4D8] focus-within:bg-white focus-within:ring-3 focus-within:ring-[#00B4D8]/20 transition-all">
+                  <Globe className="w-4 h-4 text-slate-500 shrink-0" />
+                  <input
+                    type="url"
+                    value={editUrl}
+                    onChange={(e) => setEditUrl(e.target.value)}
+                    placeholder="https://yourproduct.com (or leave empty for prompt-only video)"
+                    className="w-full text-sm text-slate-900 placeholder:text-slate-400 bg-transparent border-none outline-none font-mono"
+                  />
+                  {editUrl && (
                     <button
-                      key={len}
                       type="button"
-                      onClick={() => setEditLength(len)}
-                      className={`py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                        editLength === len
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                      onClick={() => setEditUrl('')}
+                      className="text-slate-400 hover:text-slate-600 text-xs font-bold px-1"
+                      title="Clear URL"
                     >
-                      {len}
+                      ✕
                     </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Voice & Intent */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Voice Narration
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(['female', 'male'] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setEditVoice(v)}
-                      className={`py-1.5 text-xs font-semibold rounded-lg border capitalize transition-all cursor-pointer ${
-                        editVoice === v
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Intent Mode
+              {/* Section 2: Options (HeyGen Horizontal Pill Chips) */}
+              <div className="space-y-3 pt-1">
+                <label className="text-base font-extrabold text-slate-900 block">
+                  Options
                 </label>
-                <select
-                  value={editIntent}
-                  onChange={(e) => setEditIntent(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all"
-                >
-                  <option value="promote">Promote Product</option>
-                  <option value="show_site">Show Site As-Is</option>
-                </select>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* 1. Duration Pill Chip */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLengthMenuOpen(!isLengthMenuOpen);
+                        setIsAspectMenuOpen(false);
+                        setIsBrandSystemOpen(false);
+                        setIsStyleMenuOpen(false);
+                      }}
+                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                        isLengthMenuOpen
+                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
+                          : 'bg-[#EAEFF5] hover:bg-[#DEE5ED] border-[#CBD6E2] text-slate-900'
+                      }`}
+                      title="Select video duration"
+                    >
+                      <HeygenClockIcon className="w-[18px] h-[18px] text-slate-900" />
+                      <span>{editLength}</span>
+                      <HeygenChevronIcon className={`w-4 h-4 text-slate-600 transition-transform ${isLengthMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isLengthMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsLengthMenuOpen(false)} />
+                        <div className="absolute bottom-full mb-2.5 left-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[200px] animate-in fade-in zoom-in-95 duration-150">
+                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
+                            Duration
+                          </div>
+                          {[
+                            { len: '15s' as const, label: '15s Teaser', sub: 'Fast & punchy' },
+                            { len: '30s' as const, label: '30s Short', sub: 'Standard overview' },
+                            { len: '45s' as const, label: '45s Launch', sub: 'Balanced pitch' },
+                            { len: '60s' as const, label: '60s In-Depth', sub: 'Feature walkthrough' },
+                          ].map((item) => (
+                            <button
+                              key={item.len}
+                              type="button"
+                              onClick={() => {
+                                setEditLength(item.len);
+                                setIsLengthMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                editLength === item.len ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
+                              }`}
+                            >
+                              <div>
+                                <div className="font-bold text-sm leading-snug">{item.label}</div>
+                                <div className={`text-[11px] ${editLength === item.len ? 'text-slate-300' : 'text-slate-500'}`}>
+                                  {item.sub}
+                                </div>
+                              </div>
+                              {editLength === item.len && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 2. Aspect Ratio Chip (Functional: 16:9, 9:16, 1:1) */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAspectMenuOpen(!isAspectMenuOpen);
+                        setIsLengthMenuOpen(false);
+                        setIsBrandSystemOpen(false);
+                        setIsStyleMenuOpen(false);
+                      }}
+                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                        isAspectMenuOpen
+                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
+                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                      }`}
+                      title="Choose Aspect Ratio (16:9, 9:16, 1:1)"
+                    >
+                      <HeygenAspectIcon className="w-[18px] h-[18px] text-slate-900" />
+                      <span>{editAspect}</span>
+                      <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
+                        {editAspect === '16:9' ? 'Desktop' : editAspect === '9:16' ? 'Mobile' : 'Square'}
+                      </span>
+                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isAspectMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isAspectMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsAspectMenuOpen(false)} />
+                        <div className="absolute bottom-full mb-2.5 left-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[240px] animate-in fade-in zoom-in-95 duration-150">
+                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
+                            Aspect Ratio
+                          </div>
+                          {[
+                            { ratio: '16:9' as const, label: '16:9 Widescreen', sub: 'YouTube, Web & Desktop (1920×1080)' },
+                            { ratio: '9:16' as const, label: '9:16 Vertical', sub: 'TikTok, Reels & Shorts (1080×1920)' },
+                            { ratio: '1:1' as const, label: '1:1 Square', sub: 'Instagram & Feed Posts (1080×1080)' },
+                          ].map((item) => (
+                            <button
+                              key={item.ratio}
+                              type="button"
+                              onClick={() => {
+                                setEditAspect(item.ratio);
+                                setIsAspectMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                editAspect === item.ratio ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
+                              }`}
+                            >
+                              <div>
+                                <div className="font-bold text-sm leading-snug">{item.label}</div>
+                                <div className={`text-[11px] ${editAspect === item.ratio ? 'text-slate-300' : 'text-slate-500'}`}>
+                                  {item.sub}
+                                </div>
+                              </div>
+                              {editAspect === item.ratio && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 3. Style Preset Pill Chip */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStyleMenuOpen(!isStyleMenuOpen);
+                        setIsAspectMenuOpen(false);
+                        setIsLengthMenuOpen(false);
+                        setIsBrandSystemOpen(false);
+                      }}
+                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                        isStyleMenuOpen
+                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
+                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                      }`}
+                      title="Choose visual style preset"
+                    >
+                      <HeygenStyleIcon className="w-[18px] h-[18px] text-slate-900" />
+                      <span>Style</span>
+                      <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
+                        {editStylePreset}
+                      </span>
+                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isStyleMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isStyleMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsStyleMenuOpen(false)} />
+                        <div className="absolute bottom-full mb-2.5 left-0 sm:left-auto sm:right-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[220px] animate-in fade-in zoom-in-95 duration-150">
+                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
+                            Visual Style
+                          </div>
+                          {[
+                            { key: 'auto', label: 'Auto (Brand Matched)', sub: 'Adapts to brand colors' },
+                            { key: 'coral', label: 'Coral', sub: 'Warm sunset gradient' },
+                            { key: 'punchy', label: 'Punchy', sub: 'High contrast & kinetic' },
+                            { key: 'mono', label: 'Mono', sub: 'Minimalist black & white' },
+                            { key: 'technical', label: 'Technical', sub: 'Dark blueprint & data' },
+                          ].map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => {
+                                setEditStylePreset(item.key);
+                                setIsStyleMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                editStylePreset === item.key ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
+                              }`}
+                            >
+                              <div>
+                                <div className="font-bold text-sm leading-snug">{item.label}</div>
+                                <div className={`text-[11px] ${editStylePreset === item.key ? 'text-slate-300' : 'text-slate-500'}`}>
+                                  {item.sub}
+                                </div>
+                              </div>
+                              {editStylePreset === item.key && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 4. Captions Chip (Functional ON / OFF Toggle) */}
+                  <button
+                    type="button"
+                    onClick={() => setEditCaptions(!editCaptions)}
+                    className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                      editCaptions
+                        ? 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-400'
+                    }`}
+                    title={editCaptions ? 'Captions are ON. Click to disable.' : 'Captions are OFF. Click to enable.'}
+                  >
+                    <HeygenCaptionsIcon className={`w-[18px] h-[18px] ${editCaptions ? 'text-slate-900' : 'text-slate-400'}`} />
+                    <span className={editCaptions ? 'text-slate-900' : 'text-slate-500'}>Captions</span>
+                    {editCaptions ? (
+                      <span className="text-[11px] font-black tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-300/80 px-2 py-0.5 rounded-md shadow-2xs">
+                        ON
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-black tracking-wider text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                        OFF
+                      </span>
+                    )}
+                  </button>
+
+                  {/* 5. Voice Narration Pill Chip */}
+                  <button
+                    type="button"
+                    onClick={() => setEditVoice(editVoice === 'female' ? 'male' : 'female')}
+                    className="h-11 px-5 py-2.5 rounded-full bg-white border-[1.5px] border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-[15px] font-bold text-slate-900 shadow-xs flex items-center gap-2.5 transition-all cursor-pointer"
+                    title="Click to toggle Voice (Female / Male)"
+                  >
+                    <HeygenVoiceIcon className="w-[18px] h-[18px] text-slate-900" />
+                    <span>{editVoice === 'female' ? 'Female Voice' : 'Male Voice'}</span>
+                    <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">EN</span>
+                  </button>
+
+                  {/* 6. Brand System Chip (Functional Popover with Color Picker & Brand Tokens) */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsBrandSystemOpen(!isBrandSystemOpen);
+                        setIsAspectMenuOpen(false);
+                        setIsLengthMenuOpen(false);
+                        setIsStyleMenuOpen(false);
+                      }}
+                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                        isBrandSystemOpen
+                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
+                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                      }`}
+                      title="Configure Brand System & Accent Colors"
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-2xs shrink-0"
+                        style={{ backgroundColor: editBrandColor || '#2B59FF' }}
+                      />
+                      <span>Brand System</span>
+                      <span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md uppercase">
+                        {editBrandColor || '#2B59FF'}
+                      </span>
+                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isBrandSystemOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isBrandSystemOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsBrandSystemOpen(false)} />
+                        <div className="absolute bottom-full mb-2.5 left-0 sm:left-auto sm:right-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-3 w-[220px] animate-in fade-in zoom-in-95 duration-150">
+                          {/* 8 Modern Minimalist Circular Swatches in 4x2 Grid */}
+                          <div className="grid grid-cols-4 gap-2 mb-2.5">
+                            {[
+                              { hex: '#2B59FF', darkIcon: false },
+                              { hex: '#00C2FF', darkIcon: true },
+                              { hex: '#10B981', darkIcon: false },
+                              { hex: '#8B5CF6', darkIcon: false },
+                              { hex: '#FF5733', darkIcon: false },
+                              { hex: '#F59E0B', darkIcon: true },
+                              { hex: '#EC4899', darkIcon: false },
+                              { hex: '#0F172A', darkIcon: false },
+                            ].map((swatch) => {
+                              const isSelected = editBrandColor.toLowerCase() === swatch.hex.toLowerCase();
+                              return (
+                                <button
+                                  key={swatch.hex}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditBrandColor(swatch.hex);
+                                    setIsBrandSystemOpen(false);
+                                  }}
+                                  className={`w-10 h-10 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-2xs hover:scale-105 active:scale-95 ${
+                                    isSelected ? 'ring-2 ring-offset-2 ring-slate-900 scale-105' : 'border border-black/10'
+                                  }`}
+                                  style={{ backgroundColor: swatch.hex }}
+                                  title={swatch.hex}
+                                >
+                                  {isSelected && (
+                                    <Check className={`w-4 h-4 ${swatch.darkIcon ? 'text-slate-900' : 'text-white'} stroke-[3]`} />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Minimalist Single-Line Custom Hex & Color Picker */}
+                          <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={editBrandColor.startsWith('#') ? editBrandColor : '#2B59FF'}
+                              onChange={(e) => setEditBrandColor(e.target.value.toUpperCase())}
+                              className="w-7 h-7 rounded-full cursor-pointer border border-black/10 p-0 overflow-hidden bg-transparent shrink-0"
+                              title="Open Color Wheel"
+                            />
+                            <div className="relative flex-1">
+                              <span className="absolute left-2.5 top-1.5 text-[11px] font-mono text-slate-400 font-bold">#</span>
+                              <input
+                                type="text"
+                                maxLength={7}
+                                value={editBrandColor.replace(/^#/, '')}
+                                onChange={(e) => setEditBrandColor(`#${e.target.value.replace(/[^0-9a-fA-F]/g, '')}`)}
+                                className="w-full pl-5 pr-2 py-1 text-xs font-mono font-bold rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 uppercase bg-slate-50 text-slate-800"
+                                placeholder="2B59FF"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 7. Intent / Mode Chip */}
+                  <button
+                    type="button"
+                    onClick={() => setEditIntent(editIntent === 'promote' ? 'show_site' : 'promote')}
+                    className="h-11 px-5 py-2.5 rounded-full bg-white border-[1.5px] border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-[15px] font-bold text-slate-900 shadow-xs flex items-center gap-2.5 transition-all cursor-pointer"
+                    title="Click to toggle intent mode"
+                  >
+                    <HeygenTargetIcon className="w-[18px] h-[18px] text-slate-900" />
+                    <span>{editIntent === 'promote' ? 'Promote Product' : 'Show Site As-Is'}</span>
+                    <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
+                      {editIntent === 'promote' ? 'Ad' : 'Tour'}
+                    </span>
+                  </button>
+                </div>
               </div>
+
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            {/* 3. Footer matching HeyGen: Clean, prominent black pill Continue button */}
+            <div className="p-5 px-7 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
+
               <button
                 type="button"
                 onClick={() => handleAction('edit_brief')}
                 disabled={isSubmitting}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                className="h-11 px-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#00C2FF]" />
-                <span>{isSubmitting ? 'Saving & Starting…' : 'Save & Start Agent'}</span>
+                <span>{isSubmitting ? 'Saving & Starting…' : 'Continue'}</span>
+                <ArrowRight className="w-4 h-4 text-white" />
               </button>
             </div>
+
           </div>
         </div>
       )}

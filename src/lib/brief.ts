@@ -2,20 +2,44 @@ export interface BriefConfig {
   url: string;
   intent: 'promote' | 'show_site';
   stylePreset: string;
-  length: '30s' | '45s' | '60s';
+  length: '15s' | '30s' | '45s' | '60s';
   voice: 'female' | 'male';
   language: string;
   keyMessage?: string;
+  aspect?: '1920x1080' | '1080x1920' | '1080x1080' | '16:9' | '9:16' | '1:1';
+  captions?: boolean;
+  brandColor?: string;
+  brandName?: string;
+}
+
+export function normalizeAspect(aspect?: string): '1920x1080' | '1080x1920' | '1080x1080' {
+  if (aspect === '9:16' || aspect === '1080x1920') return '1080x1920';
+  if (aspect === '1:1' || aspect === '1080x1080') return '1080x1080';
+  return '1920x1080';
+}
+
+export function aspectToLabel(aspect?: string): '16:9' | '9:16' | '1:1' {
+  if (aspect === '9:16' || aspect === '1080x1920') return '9:16';
+  if (aspect === '1:1' || aspect === '1080x1080') return '1:1';
+  return '16:9';
 }
 
 export function generateBriefMarkdown(config: BriefConfig): string {
+  const normAspect = normalizeAspect(config.aspect);
+  const destination =
+    normAspect === '1080x1920'
+      ? 'tiktok'
+      : normAspect === '1080x1080'
+      ? 'social-feed'
+      : 'website';
+
   const frontmatterLines = [
     '---',
     'workflow: product-launch-video',
     'flow: automation',
     'storyboard: yes',
-    'destination: website',
-    'aspect: 1920x1080',
+    `destination: ${destination}`,
+    `aspect: ${normAspect}`,
     `language: ${config.language || 'en'}`,
     `length: ${config.length || '45s'}`,
   ];
@@ -56,6 +80,30 @@ export function generateBriefMarkdown(config: BriefConfig): string {
     );
   }
 
+  const cleanBrandColor = config.brandColor?.trim();
+  if (cleanBrandColor) {
+    notes.push(
+      `- Primary Brand Color specified as ${cleanBrandColor}. Apply this accent across frame designs, highlights, and captions.`
+    );
+  }
+
+  const cleanBrandName = config.brandName?.trim();
+  if (cleanBrandName) {
+    notes.push(`- Brand Identity: ${cleanBrandName}.`);
+  }
+
+  const customizations = [
+    `- Narration: yes, ${config.voice || 'female'} voice.`,
+    `- Captions: ${config.captions !== false ? 'on' : 'off'}.`,
+  ];
+
+  if (cleanBrandColor) {
+    customizations.push(`- Brand Color: ${cleanBrandColor}`);
+  }
+  if (cleanBrandName) {
+    customizations.push(`- Brand Name: ${cleanBrandName}`);
+  }
+
   return `${frontmatterLines.join('\n')}
 
 ## Intent
@@ -65,8 +113,7 @@ ${hasUrl ? `Source URL: ${cleanUrl}` : `Source URL: none (pure prompt-driven vid
 
 ## Customizations
 
-- Narration: yes, ${config.voice || 'female'} voice.
-- Captions: on.
+${customizations.join('\n')}
 
 ## Notes
 

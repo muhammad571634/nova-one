@@ -108,7 +108,7 @@ export async function POST(
     }
 
     if (action === "edit_brief") {
-      const { url, intent, stylePreset, length, voice, keyMessage, language } = payload || {};
+      const { url, intent, stylePreset, length, voice, keyMessage, language, aspect, captions, brandColor, brandName } = payload || {};
       
       let currentBrief: any = {};
       try {
@@ -123,6 +123,10 @@ export async function POST(
         voice: voice === "male" ? "male" : "female",
         language: typeof language === "string" ? language : (currentBrief.language || "en"),
         keyMessage: typeof keyMessage === "string" ? keyMessage.trim() : currentBrief.keyMessage,
+        aspect: aspect || currentBrief.aspect || "1920x1080",
+        captions: typeof captions === "boolean" ? captions : (currentBrief.captions !== false),
+        brandColor: typeof brandColor === "string" && brandColor.trim() ? brandColor.trim() : currentBrief.brandColor,
+        brandName: typeof brandName === "string" && brandName.trim() ? brandName.trim() : currentBrief.brandName,
       };
 
       const { generateBriefMarkdown } = await import("@/lib/brief");
@@ -134,6 +138,28 @@ export async function POST(
       }
       if (fs.existsSync(job.project_dir)) {
         fs.writeFileSync(path.join(job.project_dir, "BRIEF.md"), newBriefMarkdown, "utf8");
+      }
+
+      // If user specified a custom brandColor, ensure capture/extracted/tokens.json is primed
+      if (updatedConfig.brandColor && job.project_dir) {
+        const extractedDir = path.join(job.project_dir, "capture", "extracted");
+        if (!fs.existsSync(extractedDir)) {
+          fs.mkdirSync(extractedDir, { recursive: true });
+        }
+        const tokensPath = path.join(extractedDir, "tokens.json");
+        let existingTokens: any = { colors: [], fonts: [] };
+        if (fs.existsSync(tokensPath)) {
+          try {
+            existingTokens = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+          } catch {}
+        }
+        const cleanBrandHex = updatedConfig.brandColor.startsWith("#") ? updatedConfig.brandColor : `#${updatedConfig.brandColor}`;
+        const existingColors = (existingTokens.colors || []).filter((c: any) => {
+          const hex = typeof c === "string" ? c : c?.hex;
+          return hex && hex.toLowerCase() !== cleanBrandHex.toLowerCase();
+        });
+        existingTokens.colors = [cleanBrandHex, ...existingColors];
+        fs.writeFileSync(tokensPath, JSON.stringify(existingTokens, null, 2), "utf8");
       }
 
       // Clear old logs so Claude starts completely fresh
