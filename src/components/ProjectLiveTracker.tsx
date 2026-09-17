@@ -18,7 +18,9 @@ import {
   Send,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Film,
+  Download
 } from 'lucide-react';
 import { ParsedStoryboard, StoryboardFrame } from '@/lib/storyboard-parser';
 
@@ -80,8 +82,36 @@ export default function ProjectLiveTracker({
   // Frame comments state: frameId -> string
   const [comments, setComments] = useState<Record<number, string>>({});
   const [activeCommentFrame, setActiveCommentFrame] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const logsEndRef = useRef<HTMLDivElement | null>(null);
+
+  const handleAction = async (action: 'revise' | 'build' | 'render') => {
+    setIsSubmitting(true);
+    try {
+      const payload = action === 'revise' ? { comments } : {};
+      const res = await fetch(`/api/jobs/${jobId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, payload }),
+      });
+      if (res.ok) {
+        if (action === 'revise') {
+          setComments({});
+          setActiveCommentFrame(null);
+        }
+        window.location.reload();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Action failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     // If status is already terminal with storyboard, no need for active SSE unless revising
@@ -336,8 +366,57 @@ export default function ProjectLiveTracker({
         )}
       </div>
 
+      {/* RENDER / RESULT SECTION */}
+      {['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
+        <div className="rounded-3xl bg-white border border-slate-200/80 p-8 shadow-sm flex flex-col items-center justify-center space-y-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">
+            <Film className="w-8 h-8 text-[#0096C7]" />
+          </div>
+          <div>
+            <h2 className="font-display font-extrabold text-2xl text-slate-900">
+              {status === 'done' ? 'Video Ready!' : 'Video Assembled'}
+            </h2>
+            <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">
+              {status === 'done' 
+                ? 'Your video has been successfully rendered. You can preview or download it now.'
+                : 'The agent has finished building the timeline. Render the final MP4 video to proceed.'}
+            </p>
+          </div>
+          
+          {status === 'awaiting_render' && (
+            <button
+              onClick={() => handleAction('render')}
+              disabled={isSubmitting}
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+            >
+              <Check className="w-5 h-5 text-emerald-400" />
+              <span>{isSubmitting ? 'Queueing...' : 'Render Video (MP4)'}</span>
+            </button>
+          )}
+
+          {(status === 'queued_rendering' || status === 'rendering') && (
+            <div className="flex items-center gap-3 text-[#0096C7] font-semibold font-display">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Rendering video... this may take a few minutes.</span>
+            </div>
+          )}
+
+          {status === 'done' && (
+            <a
+              href={`/api/jobs/${jobId}/files/renders/video.mp4`}
+              target="_blank"
+              download
+              className="px-8 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold transition-all flex items-center gap-2"
+            >
+              <Download className="w-5 h-5 text-slate-400" />
+              Download MP4
+            </a>
+          )}
+        </div>
+      )}
+
       {/* STORYBOARD SECTION — REVEALED WHEN READY! */}
-      {storyboard && storyboard.frames && storyboard.frames.length > 0 && (
+      {storyboard && storyboard.frames && storyboard.frames.length > 0 && !['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
         <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
             <div>
@@ -353,22 +432,28 @@ export default function ProjectLiveTracker({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-xs flex items-center gap-2"
-              >
-                <MessageSquare className="w-4 h-4 text-slate-400" />
-                <span>Send Comments</span>
-              </button>
-              <button
-                type="button"
-                className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2"
-              >
-                <Check className="w-4 h-4 text-[#00C2FF]" />
-                <span>Approve & Build Video</span>
-              </button>
-            </div>
+            {status === 'awaiting_approval' && (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleAction('revise')}
+                  disabled={isSubmitting || Object.keys(comments).length === 0}
+                  className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-xs flex items-center gap-2 disabled:opacity-50"
+                >
+                  <MessageSquare className="w-4 h-4 text-slate-400" />
+                  <span>{isSubmitting ? 'Sending...' : 'Send Comments'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAction('build')}
+                  disabled={isSubmitting}
+                  className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-[#0F172A] to-[#1E293B] hover:from-slate-800 hover:to-slate-900 text-white text-sm font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4 text-[#00C2FF]" />
+                  <span>{isSubmitting ? 'Building...' : 'Approve & Build Video'}</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Grid of Frame Cards */}
@@ -415,50 +500,52 @@ export default function ProjectLiveTracker({
                   </div>
 
                   {/* Soft Light Agency Comment Drawer (Per User Specification) */}
-                  <div className="border-t border-slate-100 bg-slate-50/50 p-3.5">
-                    {isOpen ? (
-                      <div className="space-y-2.5">
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                          Feedback on Frame {fr.id}
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={comments[fr.id] || ''}
-                          onChange={(e) =>
-                            setComments({ ...comments, [fr.id]: e.target.value })
-                          }
-                          placeholder="Change wording, adjust speed, or swap image..."
-                          className="w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] resize-y min-h-[70px] max-h-[160px]"
-                        />
-                        <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() => setActiveCommentFrame(null)}
-                            className="text-xs text-slate-500 hover:text-slate-800"
-                          >
-                            Done
-                          </button>
-                          <span className="text-[10px] text-slate-400">
-                            Saved in memory
-                          </span>
+                  {status === 'awaiting_approval' && (
+                    <div className="border-t border-slate-100 bg-slate-50/50 p-3.5">
+                      {isOpen ? (
+                        <div className="space-y-2.5">
+                          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                            Feedback on Frame {fr.id}
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={comments[fr.id] || ''}
+                            onChange={(e) =>
+                              setComments({ ...comments, [fr.id]: e.target.value })
+                            }
+                            placeholder="Change wording, adjust speed, or swap image..."
+                            className="w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] resize-y min-h-[70px] max-h-[160px]"
+                          />
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="button"
+                              onClick={() => setActiveCommentFrame(null)}
+                              className="text-xs text-slate-500 hover:text-slate-800"
+                            >
+                              Done
+                            </button>
+                            <span className="text-[10px] text-slate-400">
+                              Saved in memory
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCommentFrame(fr.id)}
-                        className="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-600 transition-colors flex items-center justify-between"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{hasComment ? 'Edit Feedback' : 'Add Note / Comment'}</span>
-                        </span>
-                        {hasComment && (
-                          <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setActiveCommentFrame(fr.id)}
+                          className="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-600 transition-colors flex items-center justify-between"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{hasComment ? 'Edit Feedback' : 'Add Note / Comment'}</span>
+                          </span>
+                          {hasComment && (
+                            <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
