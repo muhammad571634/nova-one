@@ -28,6 +28,10 @@
    - Modal ichida scroll qilinganda yoki tashqariga bosilganda ochiq menyular avtomatik yopiladi, `pb-48` orqali pastki variantlar ham bemalol ko'rinadi.
    - **Modern Minimalist Ideas Pills:** Yuborilgan rasm uslubidagi ixcham, chiroyli `Ideas:` tugmalari (`Fast-paced & punchy cuts`, `Explain features step-by-step`, `Dark mode & neon glow`, `Problem-first & high conversion`, `Bold kinetic typography`, `Developer-first & API showcase`). Bosilganda to'g'ridan-to'g'ri `Video Details` oynasiga kiradi, qayta bosilganda o'chadi, faol holatda `✓` bilan belgilanadi.
    - **Bitta bosishda tozalovchi `✕` tugmasi:** Textarea ichida yuqori o'ng burchakda va sarlavha qatorida `✕` (Clear) tugmasi joylashtirildi — tayyor matnni bir zumda to'liq tozalash imkoniyati berildi.
+   - **Storyboard Kartalari Tipografiyasi va Vaqt Bug'i Tuzatildi:**
+     - `parseDurationSeconds` kasrli sonlarni (`6.243s`, `4.571s`) to'g'ri o'qib, butun songa (`6s`, `5s`, `6s`, `8s`, `7s`) yaxlitlaydigan qilindi.
+     - Karta yuzasidagi toshib ketgan 200 belgilik uzun rejissyorlik tavsifi olib tashlandi — karta yuzida faqat ixcham va toza **`01 · Hook · 6s`** badge'i va qalin sarlavha ko'rsatiladi.
+     - Batafsil rejissyorlik tavsifi ("Scene Visuals & Direction") esa kartaning "Edit Scene ›" paneliga o'tkazildi.
 
 2. **Phase F6 — File Serving & HTTP Range Video Streaming (`/api/jobs/[id]/files/[...path]`):**
    - Xavfsiz fayl serveri yaratildi: path traversal (directory traversal) hujumlariga qarshi qat'iy tekshiruv.
