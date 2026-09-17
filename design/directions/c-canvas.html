@@ -34,10 +34,27 @@
   .usage { margin-top: auto; background: var(--bg); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--muted); }
   .meter { height: 6px; background: var(--line); border-radius: 9px; margin: 8px 0 6px; overflow: hidden; } .meter i { display: block; height: 100%; width: 60%; background: var(--accent); }
 
-  main { padding: 28px clamp(16px, 4vw, 48px) 150px; max-width: 1240px; width: 100%; min-width: 0; }
+  main {
+    padding: 28px clamp(16px, 4vw, 48px) 150px;
+    max-width: 1240px;
+    width: 100%;
+    min-width: 0;
+    position: relative;
+    background-image: radial-gradient(ellipse 70% 320px at 50% -30px, rgba(0, 194, 255, 0.13), rgba(99, 102, 241, 0.05), transparent 75%);
+    background-repeat: no-repeat;
+  }
   .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   .crumb { font-size: 13px; color: var(--faint); margin-bottom: 6px; font-weight: 500; }
   h1 { font: 800 clamp(28px, 3.2vw, 36px)/1.1 var(--display); letter-spacing: -0.03em; margin: 0; color: var(--ink); }
+  .gradient-text {
+    background: linear-gradient(135deg, #00C2FF 0%, #2B59FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+  .facts, .time, .card-sub, .drawer-dur-chip, .count, .progress span, .summary, .meter, .status {
+    font-variant-numeric: tabular-nums;
+  }
   .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 5px 12px 5px 10px; border-radius: 999px; }
   .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(43,89,255,.2); }
   .btns { display: flex; gap: 8px; }
@@ -684,7 +701,7 @@
 <script src="shared.js"></script>
 <script>
   const N = NOVA, P = N.project, comments = {};
-  title.textContent = P.name;
+  title.innerHTML = `Cap — <span class="gradient-text">launch video</span>`;
   message.textContent = N.message;
   steps.innerHTML = N.steps.map((s, i) => i < N.current ? `<span class="done"><svg><use href="#i-check"/></svg>${s}</span>` : `<span class="${i === N.current ? "now" : ""}">${s}</span>`).join("");
   facts.innerHTML = [[P.length, "long"], [P.voice, ""], [P.preset, "style"]].map(([a, b]) => `<div>${a} <span>${b}</span></div>`).join("");
