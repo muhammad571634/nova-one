@@ -26,7 +26,10 @@ import {
   Pencil,
   X,
   StopCircle,
-  Sliders
+  Sliders,
+  Plus,
+  Minus,
+  Maximize2
 } from 'lucide-react';
 import { ParsedStoryboard, StoryboardFrame } from '@/lib/storyboard-parser';
 
@@ -89,6 +92,40 @@ export default function ProjectLiveTracker({
   const [comments, setComments] = useState<Record<number, string>>({});
   const [activeCommentFrame, setActiveCommentFrame] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Frame custom durations state: frameId -> number (seconds)
+  const [frameSeconds, setFrameSeconds] = useState<Record<number, number>>({});
+
+  // Helper to parse seconds from string like "0:00 - 0:08 (8s)" or "8s"
+  const parseDurationSeconds = (raw: string): number => {
+    const match = raw.match(/(\d+)s/);
+    if (match) return parseInt(match[1], 10);
+    const rangeMatch = raw.match(/:(\d{2})\s*-\s*\d+:(\d{2})/);
+    if (rangeMatch) {
+      const diff = parseInt(rangeMatch[2], 10) - parseInt(rangeMatch[1], 10);
+      if (diff > 0) return diff;
+    }
+    return 6;
+  };
+
+  const getFrameDuration = (frameId: number, raw: string): number => {
+    if (frameSeconds[frameId] !== undefined) return frameSeconds[frameId];
+    return parseDurationSeconds(raw);
+  };
+
+  const handleDurationDelta = (frameId: number, raw: string, delta: number) => {
+    const current = getFrameDuration(frameId, raw);
+    const updated = Math.max(1, Math.min(30, current + delta));
+    setFrameSeconds((prev) => ({ ...prev, [frameId]: updated }));
+
+    // Sync duration request into comments for agent
+    setComments((prev) => {
+      const existing = prev[frameId] || '';
+      const cleanNote = existing.replace(/\[Duration:\s*\d+s\]\s*/g, '').trim();
+      const updatedNote = `[Duration: ${updated}s] ${cleanNote}`.trim();
+      return { ...prev, [frameId]: updatedNote };
+    });
+  };
 
   // Edit Brief Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -205,6 +242,28 @@ export default function ProjectLiveTracker({
       logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logs, isLogOpen]);
+
+  // Dynamic Browser Tab Title
+  useEffect(() => {
+    const brandName = slug ? slug.replace(/-/g, ' ').toUpperCase() : 'NOVA ONE';
+    if (status === 'planning') {
+      document.title = `(● ${milestones.percentage}%) Planning ${brandName} · Nova One`;
+    } else if (status === 'building' || status === 'queued_building') {
+      document.title = `(● ${milestones.percentage}%) Assembling ${brandName} · Nova One`;
+    } else if (status === 'rendering' || status === 'queued_rendering') {
+      document.title = `(●) Rendering MP4 · Nova One`;
+    } else if (status === 'awaiting_approval') {
+      document.title = `(✓) Storyboard Ready! · Nova One`;
+    } else if (status === 'done') {
+      document.title = `(✓) Video Ready! · Nova One`;
+    } else if (status === 'cancelled') {
+      document.title = `(⏹) Stopped · Nova One`;
+    } else if (status === 'failed') {
+      document.title = `(✕) Failed · Nova One`;
+    } else {
+      document.title = `${brandName} — Launch Video · Nova One`;
+    }
+  }, [status, milestones.percentage, slug]);
 
   // Determine active capsule stage
   const capsuleSteps = [
@@ -603,12 +662,75 @@ export default function ProjectLiveTracker({
                   {/* Card Header & Scene */}
                   <div className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold font-display uppercase tracking-wider text-[#0096C7] bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold font-display uppercase tracking-wider text-[#0096C7] bg-cyan-50 border border-cyan-200 px-2.5 py-0.5 rounded-full">
                         Frame {fr.id}
                       </span>
-                      <span className="text-xs font-semibold text-slate-500 tabular-nums bg-slate-100 px-2 py-0.5 rounded-md">
-                        {fr.duration}
-                      </span>
+                      
+                      {/* Quick Duration +/- Controls */}
+                      <div className="flex items-center gap-1 bg-slate-100/90 rounded-xl p-0.5 border border-slate-200/90">
+                        {status === 'awaiting_approval' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDurationDelta(fr.id, fr.duration, -1)}
+                            className="w-5 h-5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-all text-xs font-bold cursor-pointer"
+                            title="Decrease duration by 1s"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                        )}
+                        <span className="text-xs font-semibold text-slate-700 tabular-nums px-1.5 font-mono">
+                          {getFrameDuration(fr.id, fr.duration)}s
+                        </span>
+                        {status === 'awaiting_approval' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDurationDelta(fr.id, fr.duration, 1)}
+                            className="w-5 h-5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-white transition-all text-xs font-bold cursor-pointer"
+                            title="Increase duration by 1s"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 16:9 Video Canvas Wireframe */}
+                    <div className="relative aspect-video w-full rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 border border-slate-700/50 overflow-hidden p-3 flex flex-col justify-between shadow-inner select-none">
+                      {/* Grid background / subtle composition guides */}
+                      <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:12px_12px] opacity-35 pointer-events-none" />
+                      <div className="absolute inset-2 border border-dashed border-slate-700/30 rounded-xl pointer-events-none" />
+
+                      {/* Top Bar inside frame */}
+                      <div className="relative z-10 flex items-center justify-between">
+                        <span className="font-mono text-[9px] text-cyan-400 bg-slate-950/80 px-1.5 py-0.5 rounded border border-cyan-500/20 backdrop-blur-xs">
+                          1080p · Beat {fr.id}
+                        </span>
+                        <span className="font-mono text-[9px] text-slate-300 bg-slate-950/60 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                          {getFrameDuration(fr.id, fr.duration)}s
+                        </span>
+                      </div>
+
+                      {/* Center Composition Preview: typography mockup or scene cue */}
+                      <div className="relative z-10 text-center px-3 py-1 space-y-1 my-auto">
+                        <div className="w-12 h-1 mx-auto bg-gradient-to-r from-transparent via-[#00C2FF]/60 to-transparent rounded-full" />
+                        <p className="font-display font-bold text-xs text-slate-100 tracking-tight line-clamp-1 drop-shadow-sm">
+                          {fr.title}
+                        </p>
+                        <p className="text-[10px] text-slate-400 line-clamp-1 italic font-mono">
+                          {fr.voiceover ? `"${fr.voiceover.slice(0, 42)}..."` : 'Visual transition beat'}
+                        </p>
+                      </div>
+
+                      {/* Bottom Safe Area / Progress marker */}
+                      <div className="relative z-10 flex items-center justify-between text-[9px] text-slate-400">
+                        <span className="flex items-center gap-1 font-mono text-[9px] text-slate-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>16:9 Canvas</span>
+                        </span>
+                        <span className="font-mono text-[9px] text-slate-400">
+                          Motion Layer
+                        </span>
+                      </div>
                     </div>
 
                     <h3 className="font-display font-bold text-base text-slate-900 leading-snug">
@@ -742,16 +864,58 @@ export default function ProjectLiveTracker({
 
             {/* Custom Prompt / Key Message */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Custom Instructions & Prompt
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Custom Instructions & Prompt
+                </label>
+                <span
+                  className={`text-[10px] font-mono tabular-nums ${
+                    editKeyMessage.length > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'
+                  }`}
+                >
+                  {editKeyMessage.length} / 500
+                </span>
+              </div>
               <textarea
                 rows={4}
+                maxLength={500}
                 value={editKeyMessage}
                 onChange={(e) => setEditKeyMessage(e.target.value)}
                 placeholder="E.g., Create a high-energy 30-second promo for our AI editor. Highlight speed, show code snippets, use dark mode with purple accents, female voiceover..."
                 className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50/50 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30 focus:border-[#00B4D8] focus:bg-white transition-all resize-y"
               />
+
+              {/* Prompt Inspiration Chips */}
+              <div className="pt-1 space-y-1.5">
+                <span className="text-[10px] font-medium text-slate-400 block">
+                  Quick Ideas (click to append):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'Dark mode & neon glow',
+                    'No scraping, pure typography',
+                    'Fast-paced & punchy cuts',
+                    'Explain features step-by-step',
+                    'Cinematic developer aesthetics',
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        setEditKeyMessage((prev: string) => {
+                          const trimmed = prev.trim();
+                          if (!trimmed) return chip;
+                          if (trimmed.includes(chip)) return prev;
+                          return `${trimmed}. ${chip}`;
+                        });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-cyan-50 hover:text-[#0096C7] hover:border-cyan-200 border border-slate-200/80 text-[11px] text-slate-600 font-medium transition-all cursor-pointer shadow-2xs"
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Style Preset & Duration */}
