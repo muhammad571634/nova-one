@@ -19,13 +19,15 @@
 
 ## 2. Oxirgi Bajarilgan Ishlar (Completed Milestones)
 
-1. **Edit Brief Modal (HeyGen Minimalist Dropdowns UI):**
+1. **Edit Brief Modal (HeyGen Minimalist Dropdowns & Ideas UI):**
    - Foydalanuvchi yuborgan 2-rasmga (HeyGen) to'liq moslashtirildi.
    - Barcha mini tanlov menyulari (Duration, Aspect, Style, Brand System, Voice, Intent) **pastga ochiladigan** (`top-full mt-1.5 left-0 z-50`) qilindi.
    - Barcha ortiqcha uzun matnlar va subtextlar olib tashlandi — faqat kategoriya ikonkasi + qisqa qiymat (`Auto`, `15sec`, `30sec`, `1min` yoki `16:9`, `9:16`, `1:1`).
    - Tanlangan variant HeyGen havorang doira check belgisi (`HeygenCheckCircle`) bilan ko'rsatiladi, qora bloklar olib tashlanib, yorug' minimalist ko'rinishga keltirildi.
    - Captions bitta bosish bilan `ON` / `OFF` qilinadi.
    - Modal ichida scroll qilinganda yoki tashqariga bosilganda ochiq menyular avtomatik yopiladi, `pb-48` orqali pastki variantlar ham bemalol ko'rinadi.
+   - **Modern Minimalist Ideas Pills:** Yuborilgan rasm uslubidagi ixcham, chiroyli `Ideas:` tugmalari (`Fast-paced & punchy cuts`, `Explain features step-by-step`, `Dark mode & neon glow`, `Problem-first & high conversion`, `Bold kinetic typography`, `Developer-first & API showcase`). Bosilganda to'g'ridan-to'g'ri `Video Details` oynasiga kiradi, qayta bosilganda o'chadi, faol holatda `✓` bilan belgilanadi.
+   - **Bitta bosishda tozalovchi `✕` tugmasi:** Textarea ichida yuqori o'ng burchakda va sarlavha qatorida `✕` (Clear) tugmasi joylashtirildi — tayyor matnni bir zumda to'liq tozalash imkoniyati berildi.
 
 2. **Phase F6 — File Serving & HTTP Range Video Streaming (`/api/jobs/[id]/files/[...path]`):**
    - Xavfsiz fayl serveri yaratildi: path traversal (directory traversal) hujumlariga qarshi qat'iy tekshiruv.
