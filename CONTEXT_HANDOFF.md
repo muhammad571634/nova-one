@@ -19,10 +19,13 @@
 
 ## 2. Oxirgi Bajarilgan Ishlar (Completed Milestones)
 
-1. **Edit Brief Modal (HeyGen UI/UX talabi):**
-   - Modal to'liq HeyGen dizayniga keltirildi: katta va toza shriftlar, banner, Script Writer AI tugmasi.
-   - Barcha 7 ta variant interaktiv va funksional holatga keltirildi (Duration, Aspect, Visual Style, Captions, Voice, Brand System, Intent Mode).
-   - Mini popoverlar tepaga ochiladigan qilindi va tashqariga bosganda darhol yopiladigan backdrop qo'shildi.
+1. **Edit Brief Modal (HeyGen Minimalist Dropdowns UI):**
+   - Foydalanuvchi yuborgan 2-rasmga (HeyGen) to'liq moslashtirildi.
+   - Barcha mini tanlov menyulari (Duration, Aspect, Style, Brand System, Voice, Intent) **pastga ochiladigan** (`top-full mt-1.5 left-0 z-50`) qilindi.
+   - Barcha ortiqcha uzun matnlar va subtextlar olib tashlandi — faqat kategoriya ikonkasi + qisqa qiymat (`Auto`, `15sec`, `30sec`, `1min` yoki `16:9`, `9:16`, `1:1`).
+   - Tanlangan variant HeyGen havorang doira check belgisi (`HeygenCheckCircle`) bilan ko'rsatiladi, qora bloklar olib tashlanib, yorug' minimalist ko'rinishga keltirildi.
+   - Captions bitta bosish bilan `ON` / `OFF` qilinadi.
+   - Modal ichida scroll qilinganda yoki tashqariga bosilganda ochiq menyular avtomatik yopiladi, `pb-48` orqali pastki variantlar ham bemalol ko'rinadi.
 
 2. **Phase F6 — File Serving & HTTP Range Video Streaming (`/api/jobs/[id]/files/[...path]`):**
    - Xavfsiz fayl serveri yaratildi: path traversal (directory traversal) hujumlariga qarshi qat'iy tekshiruv.
