@@ -182,6 +182,14 @@ function HeygenChevronIcon({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
+function HeygenCheckCircle({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <div className={`${className} rounded-full border-[1.5px] border-[#00B4D8] flex items-center justify-center shrink-0`}>
+      <Check className="w-2.5 h-2.5 text-[#00B4D8] stroke-[3]" />
+    </div>
+  );
+}
+
 interface MilestoneState {
   step: 'setup' | 'capture' | 'design' | 'storyboard' | 'building' | 'render' | 'ready';
   percentage: number;
@@ -288,6 +296,17 @@ export default function ProjectLiveTracker({
   const [isAspectMenuOpen, setIsAspectMenuOpen] = useState(false);
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
   const [isBrandSystemOpen, setIsBrandSystemOpen] = useState(false);
+  const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
+  const [isIntentMenuOpen, setIsIntentMenuOpen] = useState(false);
+
+  const closeAllMenus = () => {
+    setIsLengthMenuOpen(false);
+    setIsAspectMenuOpen(false);
+    setIsStyleMenuOpen(false);
+    setIsBrandSystemOpen(false);
+    setIsVoiceMenuOpen(false);
+    setIsIntentMenuOpen(false);
+  };
 
   useEffect(() => {
     if (briefConfig) {
@@ -1443,13 +1462,8 @@ export default function ProjectLiveTracker({
 
             {/* 2. Scrollable Modal Content */}
             <div
-              className="p-7 pb-24 overflow-y-auto overscroll-contain space-y-6 scrollbar-thin"
-              onScroll={() => {
-                if (isBrandSystemOpen) setIsBrandSystemOpen(false);
-                if (isAspectMenuOpen) setIsAspectMenuOpen(false);
-                if (isLengthMenuOpen) setIsLengthMenuOpen(false);
-                if (isStyleMenuOpen) setIsStyleMenuOpen(false);
-              }}
+              className="p-7 pb-48 overflow-y-auto overscroll-contain space-y-6 scrollbar-thin"
+              onScroll={closeAllMenus}
             >
               
               {/* Section 1: Video Details (Textarea + Inside Script Writer Pill) */}
@@ -1550,47 +1564,43 @@ export default function ProjectLiveTracker({
                 </div>
               </div>
 
-              {/* Section 2: Options (HeyGen Horizontal Pill Chips) */}
+              {/* Section 2: Options (HeyGen Horizontal Pill Chips & Minimalist Dropdowns) */}
               <div className="space-y-3 pt-1">
-                <label className="text-base font-extrabold text-slate-900 block">
+                <label className="text-[15px] font-bold text-slate-900 block">
                   Options
                 </label>
                 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                   {/* 1. Duration Pill Chip */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => {
-                        setIsLengthMenuOpen(!isLengthMenuOpen);
-                        setIsAspectMenuOpen(false);
-                        setIsBrandSystemOpen(false);
-                        setIsStyleMenuOpen(false);
+                        const next = !isLengthMenuOpen;
+                        closeAllMenus();
+                        setIsLengthMenuOpen(next);
                       }}
-                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
                         isLengthMenuOpen
-                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
-                          : 'bg-[#EAEFF5] hover:bg-[#DEE5ED] border-[#CBD6E2] text-slate-900'
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
                       }`}
                       title="Select video duration"
                     >
-                      <HeygenClockIcon className="w-[18px] h-[18px] text-slate-900" />
-                      <span>{editLength}</span>
-                      <HeygenChevronIcon className={`w-4 h-4 text-slate-600 transition-transform ${isLengthMenuOpen ? 'rotate-180' : ''}`} />
+                      <HeygenClockIcon className="w-4 h-4 text-slate-700" />
+                      <span>{editLength === '45s' ? 'Auto' : editLength === '15s' ? '15sec' : editLength === '30s' ? '30sec' : '1min'}</span>
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isLengthMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isLengthMenuOpen && (
                       <>
-                        <div className="fixed inset-0 z-30" onClick={() => setIsLengthMenuOpen(false)} />
-                        <div className="absolute bottom-full mb-2.5 left-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[200px] animate-in fade-in zoom-in-95 duration-150">
-                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
-                            Duration
-                          </div>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 min-w-[130px] animate-in fade-in zoom-in-95 duration-150">
                           {[
-                            { len: '15s' as const, label: '15s Teaser', sub: 'Fast & punchy' },
-                            { len: '30s' as const, label: '30s Short', sub: 'Standard overview' },
-                            { len: '45s' as const, label: '45s Launch', sub: 'Balanced pitch' },
-                            { len: '60s' as const, label: '60s In-Depth', sub: 'Feature walkthrough' },
+                            { len: '45s' as const, label: 'Auto' },
+                            { len: '15s' as const, label: '15sec' },
+                            { len: '30s' as const, label: '30sec' },
+                            { len: '60s' as const, label: '1min' },
                           ].map((item) => (
                             <button
                               key={item.len}
@@ -1599,17 +1609,13 @@ export default function ProjectLiveTracker({
                                 setEditLength(item.len);
                                 setIsLengthMenuOpen(false);
                               }}
-                              className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                editLength === item.len ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
-                              }`}
+                              className="w-full px-3 py-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-100/70 transition-colors cursor-pointer group"
                             >
-                              <div>
-                                <div className="font-bold text-sm leading-snug">{item.label}</div>
-                                <div className={`text-[11px] ${editLength === item.len ? 'text-slate-300' : 'text-slate-500'}`}>
-                                  {item.sub}
-                                </div>
+                              <div className="flex items-center gap-2.5">
+                                <HeygenClockIcon className="w-4 h-4 text-slate-700 shrink-0" />
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
                               </div>
-                              {editLength === item.len && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                              {editLength === item.len && <HeygenCheckCircle className="w-4 h-4" />}
                             </button>
                           ))}
                         </div>
@@ -1617,42 +1623,35 @@ export default function ProjectLiveTracker({
                     )}
                   </div>
 
-                  {/* 2. Aspect Ratio Chip (Functional: 16:9, 9:16, 1:1) */}
+                  {/* 2. Aspect Ratio Chip */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => {
-                        setIsAspectMenuOpen(!isAspectMenuOpen);
-                        setIsLengthMenuOpen(false);
-                        setIsBrandSystemOpen(false);
-                        setIsStyleMenuOpen(false);
+                        const next = !isAspectMenuOpen;
+                        closeAllMenus();
+                        setIsAspectMenuOpen(next);
                       }}
-                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
                         isAspectMenuOpen
-                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
-                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
                       }`}
-                      title="Choose Aspect Ratio (16:9, 9:16, 1:1)"
+                      title="Choose Aspect Ratio"
                     >
-                      <HeygenAspectIcon className="w-[18px] h-[18px] text-slate-900" />
+                      <HeygenAspectIcon className="w-4 h-4 text-slate-700" />
                       <span>{editAspect}</span>
-                      <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
-                        {editAspect === '16:9' ? 'Desktop' : editAspect === '9:16' ? 'Mobile' : 'Square'}
-                      </span>
-                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isAspectMenuOpen ? 'rotate-180' : ''}`} />
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isAspectMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isAspectMenuOpen && (
                       <>
-                        <div className="fixed inset-0 z-30" onClick={() => setIsAspectMenuOpen(false)} />
-                        <div className="absolute bottom-full mb-2.5 left-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[240px] animate-in fade-in zoom-in-95 duration-150">
-                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
-                            Aspect Ratio
-                          </div>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 min-w-[125px] animate-in fade-in zoom-in-95 duration-150">
                           {[
-                            { ratio: '16:9' as const, label: '16:9 Widescreen', sub: 'YouTube, Web & Desktop (1920×1080)' },
-                            { ratio: '9:16' as const, label: '9:16 Vertical', sub: 'TikTok, Reels & Shorts (1080×1920)' },
-                            { ratio: '1:1' as const, label: '1:1 Square', sub: 'Instagram & Feed Posts (1080×1080)' },
+                            { ratio: '16:9' as const, label: '16:9' },
+                            { ratio: '9:16' as const, label: '9:16' },
+                            { ratio: '1:1' as const, label: '1:1' },
                           ].map((item) => (
                             <button
                               key={item.ratio}
@@ -1661,17 +1660,13 @@ export default function ProjectLiveTracker({
                                 setEditAspect(item.ratio);
                                 setIsAspectMenuOpen(false);
                               }}
-                              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                editAspect === item.ratio ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
-                              }`}
+                              className="w-full px-3 py-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-100/70 transition-colors cursor-pointer group"
                             >
-                              <div>
-                                <div className="font-bold text-sm leading-snug">{item.label}</div>
-                                <div className={`text-[11px] ${editAspect === item.ratio ? 'text-slate-300' : 'text-slate-500'}`}>
-                                  {item.sub}
-                                </div>
+                              <div className="flex items-center gap-2.5">
+                                <HeygenAspectIcon className="w-4 h-4 text-slate-700 shrink-0" />
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
                               </div>
-                              {editAspect === item.ratio && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                              {editAspect === item.ratio && <HeygenCheckCircle className="w-4 h-4" />}
                             </button>
                           ))}
                         </div>
@@ -1679,44 +1674,37 @@ export default function ProjectLiveTracker({
                     )}
                   </div>
 
-                  {/* 3. Style Preset Pill Chip */}
+                  {/* 3. Style Preset Chip */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => {
-                        setIsStyleMenuOpen(!isStyleMenuOpen);
-                        setIsAspectMenuOpen(false);
-                        setIsLengthMenuOpen(false);
-                        setIsBrandSystemOpen(false);
+                        const next = !isStyleMenuOpen;
+                        closeAllMenus();
+                        setIsStyleMenuOpen(next);
                       }}
-                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
                         isStyleMenuOpen
-                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
-                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
                       }`}
                       title="Choose visual style preset"
                     >
-                      <HeygenStyleIcon className="w-[18px] h-[18px] text-slate-900" />
-                      <span>Style</span>
-                      <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
-                        {editStylePreset}
-                      </span>
-                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isStyleMenuOpen ? 'rotate-180' : ''}`} />
+                      <HeygenStyleIcon className="w-4 h-4 text-slate-700" />
+                      <span>{editStylePreset === 'auto' ? 'Auto' : editStylePreset.charAt(0).toUpperCase() + editStylePreset.slice(1)}</span>
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isStyleMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isStyleMenuOpen && (
                       <>
-                        <div className="fixed inset-0 z-30" onClick={() => setIsStyleMenuOpen(false)} />
-                        <div className="absolute bottom-full mb-2.5 left-0 sm:left-auto sm:right-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-2 min-w-[220px] animate-in fade-in zoom-in-95 duration-150">
-                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1.5">
-                            Visual Style
-                          </div>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 min-w-[130px] animate-in fade-in zoom-in-95 duration-150">
                           {[
-                            { key: 'auto', label: 'Auto (Brand Matched)', sub: 'Adapts to brand colors' },
-                            { key: 'coral', label: 'Coral', sub: 'Warm sunset gradient' },
-                            { key: 'punchy', label: 'Punchy', sub: 'High contrast & kinetic' },
-                            { key: 'mono', label: 'Mono', sub: 'Minimalist black & white' },
-                            { key: 'technical', label: 'Technical', sub: 'Dark blueprint & data' },
+                            { key: 'auto', label: 'Auto' },
+                            { key: 'coral', label: 'Coral' },
+                            { key: 'punchy', label: 'Punchy' },
+                            { key: 'mono', label: 'Mono' },
+                            { key: 'technical', label: 'Technical' },
                           ].map((item) => (
                             <button
                               key={item.key}
@@ -1725,17 +1713,13 @@ export default function ProjectLiveTracker({
                                 setEditStylePreset(item.key);
                                 setIsStyleMenuOpen(false);
                               }}
-                              className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                editStylePreset === item.key ? 'bg-slate-900 text-white' : 'hover:bg-slate-100 text-slate-800'
-                              }`}
+                              className="w-full px-3 py-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-100/70 transition-colors cursor-pointer group"
                             >
-                              <div>
-                                <div className="font-bold text-sm leading-snug">{item.label}</div>
-                                <div className={`text-[11px] ${editStylePreset === item.key ? 'text-slate-300' : 'text-slate-500'}`}>
-                                  {item.sub}
-                                </div>
+                              <div className="flex items-center gap-2.5">
+                                <HeygenStyleIcon className="w-4 h-4 text-slate-700 shrink-0" />
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
                               </div>
-                              {editStylePreset === item.key && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                              {editStylePreset === item.key && <HeygenCheckCircle className="w-4 h-4" />}
                             </button>
                           ))}
                         </div>
@@ -1743,75 +1727,51 @@ export default function ProjectLiveTracker({
                     )}
                   </div>
 
-                  {/* 4. Captions Chip (Functional ON / OFF Toggle) */}
+                  {/* 4. Captions Chip (Single-click toggle matching HeyGen) */}
                   <button
                     type="button"
-                    onClick={() => setEditCaptions(!editCaptions)}
-                    className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
-                      editCaptions
-                        ? 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
-                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-400'
-                    }`}
+                    onClick={() => {
+                      closeAllMenus();
+                      setEditCaptions(!editCaptions);
+                    }}
+                    className="h-10 px-4 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm shadow-xs flex items-center gap-2 transition-all cursor-pointer"
                     title={editCaptions ? 'Captions are ON. Click to disable.' : 'Captions are OFF. Click to enable.'}
                   >
-                    <HeygenCaptionsIcon className={`w-[18px] h-[18px] ${editCaptions ? 'text-slate-900' : 'text-slate-400'}`} />
-                    <span className={editCaptions ? 'text-slate-900' : 'text-slate-500'}>Captions</span>
-                    {editCaptions ? (
-                      <span className="text-[11px] font-black tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-300/80 px-2 py-0.5 rounded-md shadow-2xs">
-                        ON
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-black tracking-wider text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                        OFF
-                      </span>
-                    )}
+                    <HeygenCaptionsIcon className="w-4 h-4 text-slate-700" />
+                    <span>Captions</span>
+                    <span className={`text-xs font-semibold ${editCaptions ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {editCaptions ? 'ON' : 'OFF'}
+                    </span>
                   </button>
 
-                  {/* 5. Voice Narration Pill Chip */}
-                  <button
-                    type="button"
-                    onClick={() => setEditVoice(editVoice === 'female' ? 'male' : 'female')}
-                    className="h-11 px-5 py-2.5 rounded-full bg-white border-[1.5px] border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-[15px] font-bold text-slate-900 shadow-xs flex items-center gap-2.5 transition-all cursor-pointer"
-                    title="Click to toggle Voice (Female / Male)"
-                  >
-                    <HeygenVoiceIcon className="w-[18px] h-[18px] text-slate-900" />
-                    <span>{editVoice === 'female' ? 'Female Voice' : 'Male Voice'}</span>
-                    <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">EN</span>
-                  </button>
-
-                  {/* 6. Brand System Chip (Functional Popover with Color Picker & Brand Tokens) */}
+                  {/* 5. Brand System Chip (Functional Popover with Color Picker) */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => {
-                        setIsBrandSystemOpen(!isBrandSystemOpen);
-                        setIsAspectMenuOpen(false);
-                        setIsLengthMenuOpen(false);
-                        setIsStyleMenuOpen(false);
+                        const next = !isBrandSystemOpen;
+                        closeAllMenus();
+                        setIsBrandSystemOpen(next);
                       }}
-                      className={`h-11 px-5 py-2.5 rounded-full border-[1.5px] text-[15px] font-bold shadow-xs flex items-center gap-2.5 transition-all cursor-pointer ${
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
                         isBrandSystemOpen
-                          ? 'bg-slate-100 border-slate-400 text-slate-900 ring-2 ring-slate-900/10'
-                          : 'bg-white border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-slate-900'
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
                       }`}
-                      title="Configure Brand System & Accent Colors"
+                      title="Configure Brand Color"
                     >
                       <span
                         className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-2xs shrink-0"
                         style={{ backgroundColor: editBrandColor || '#2B59FF' }}
                       />
                       <span>Brand System</span>
-                      <span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md uppercase">
-                        {editBrandColor || '#2B59FF'}
-                      </span>
-                      <HeygenChevronIcon className={`w-4 h-4 text-slate-500 transition-transform ${isBrandSystemOpen ? 'rotate-180' : ''}`} />
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isBrandSystemOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isBrandSystemOpen && (
                       <>
-                        <div className="fixed inset-0 z-30" onClick={() => setIsBrandSystemOpen(false)} />
-                        <div className="absolute bottom-full mb-2.5 left-0 sm:left-auto sm:right-0 z-40 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.16)] border border-slate-200/90 p-3 w-[220px] animate-in fade-in zoom-in-95 duration-150">
-                          {/* 8 Modern Minimalist Circular Swatches in 4x2 Grid */}
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-3 w-[190px] animate-in fade-in zoom-in-95 duration-150">
                           <div className="grid grid-cols-4 gap-2 mb-2.5">
                             {[
                               { hex: '#2B59FF', darkIcon: false },
@@ -1832,37 +1792,36 @@ export default function ProjectLiveTracker({
                                     setEditBrandColor(swatch.hex);
                                     setIsBrandSystemOpen(false);
                                   }}
-                                  className={`w-10 h-10 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-2xs hover:scale-105 active:scale-95 ${
-                                    isSelected ? 'ring-2 ring-offset-2 ring-slate-900 scale-105' : 'border border-black/10'
+                                  className={`w-8 h-8 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-2xs hover:scale-110 active:scale-95 ${
+                                    isSelected ? 'ring-2 ring-offset-2 ring-[#00B4D8] scale-105' : 'border border-black/10'
                                   }`}
                                   style={{ backgroundColor: swatch.hex }}
                                   title={swatch.hex}
                                 >
                                   {isSelected && (
-                                    <Check className={`w-4 h-4 ${swatch.darkIcon ? 'text-slate-900' : 'text-white'} stroke-[3]`} />
+                                    <Check className={`w-3.5 h-3.5 ${swatch.darkIcon ? 'text-slate-900' : 'text-white'} stroke-[3]`} />
                                   )}
                                 </button>
                               );
                             })}
                           </div>
 
-                          {/* Minimalist Single-Line Custom Hex & Color Picker */}
-                          <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                          <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5">
                             <input
                               type="color"
                               value={editBrandColor.startsWith('#') ? editBrandColor : '#2B59FF'}
                               onChange={(e) => setEditBrandColor(e.target.value.toUpperCase())}
-                              className="w-7 h-7 rounded-full cursor-pointer border border-black/10 p-0 overflow-hidden bg-transparent shrink-0"
-                              title="Open Color Wheel"
+                              className="w-6 h-6 rounded-full cursor-pointer border border-black/10 p-0 overflow-hidden bg-transparent shrink-0"
+                              title="Color Picker"
                             />
                             <div className="relative flex-1">
-                              <span className="absolute left-2.5 top-1.5 text-[11px] font-mono text-slate-400 font-bold">#</span>
+                              <span className="absolute left-2 top-1 text-[11px] font-mono text-slate-400 font-bold">#</span>
                               <input
                                 type="text"
                                 maxLength={7}
                                 value={editBrandColor.replace(/^#/, '')}
                                 onChange={(e) => setEditBrandColor(`#${e.target.value.replace(/[^0-9a-fA-F]/g, '')}`)}
-                                className="w-full pl-5 pr-2 py-1 text-xs font-mono font-bold rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 uppercase bg-slate-50 text-slate-800"
+                                className="w-full pl-4.5 pr-1.5 py-0.5 text-xs font-mono font-bold rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 uppercase bg-slate-50 text-slate-800"
                                 placeholder="2B59FF"
                               />
                             </div>
@@ -1872,19 +1831,105 @@ export default function ProjectLiveTracker({
                     )}
                   </div>
 
+                  {/* 6. Voice Narration Chip */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !isVoiceMenuOpen;
+                        closeAllMenus();
+                        setIsVoiceMenuOpen(next);
+                      }}
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
+                        isVoiceMenuOpen
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
+                      }`}
+                      title="Choose Voice"
+                    >
+                      <HeygenVoiceIcon className="w-4 h-4 text-slate-700" />
+                      <span>{editVoice === 'female' ? 'Female Voice' : 'Male Voice'}</span>
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isVoiceMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isVoiceMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 min-w-[145px] animate-in fade-in zoom-in-95 duration-150">
+                          {[
+                            { key: 'female' as const, label: 'Female Voice' },
+                            { key: 'male' as const, label: 'Male Voice' },
+                          ].map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => {
+                                setEditVoice(item.key);
+                                setIsVoiceMenuOpen(false);
+                              }}
+                              className="w-full px-3 py-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-100/70 transition-colors cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <HeygenVoiceIcon className="w-4 h-4 text-slate-700 shrink-0" />
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
+                              </div>
+                              {editVoice === item.key && <HeygenCheckCircle className="w-4 h-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   {/* 7. Intent / Mode Chip */}
-                  <button
-                    type="button"
-                    onClick={() => setEditIntent(editIntent === 'promote' ? 'show_site' : 'promote')}
-                    className="h-11 px-5 py-2.5 rounded-full bg-white border-[1.5px] border-slate-300/90 hover:bg-slate-50 hover:border-slate-400 text-[15px] font-bold text-slate-900 shadow-xs flex items-center gap-2.5 transition-all cursor-pointer"
-                    title="Click to toggle intent mode"
-                  >
-                    <HeygenTargetIcon className="w-[18px] h-[18px] text-slate-900" />
-                    <span>{editIntent === 'promote' ? 'Promote Product' : 'Show Site As-Is'}</span>
-                    <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
-                      {editIntent === 'promote' ? 'Ad' : 'Tour'}
-                    </span>
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !isIntentMenuOpen;
+                        closeAllMenus();
+                        setIsIntentMenuOpen(next);
+                      }}
+                      className={`h-10 px-4 rounded-full border text-sm font-semibold shadow-xs flex items-center gap-2 transition-all cursor-pointer ${
+                        isIntentMenuOpen
+                          ? 'bg-slate-100 border-slate-300 text-slate-900'
+                          : 'bg-white border-slate-200/90 hover:bg-slate-50 text-slate-800'
+                      }`}
+                      title="Choose Video Goal"
+                    >
+                      <HeygenTargetIcon className="w-4 h-4 text-slate-700" />
+                      <span>{editIntent === 'promote' ? 'Promote Product' : 'Show Site As-Is'}</span>
+                      <HeygenChevronIcon className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isIntentMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isIntentMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={closeAllMenus} />
+                        <div className="absolute top-full mt-1.5 left-0 sm:left-auto sm:right-0 z-50 bg-white rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 min-w-[165px] animate-in fade-in zoom-in-95 duration-150">
+                          {[
+                            { key: 'promote' as const, label: 'Promote Product' },
+                            { key: 'show_site' as const, label: 'Show Site As-Is' },
+                          ].map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => {
+                                setEditIntent(item.key);
+                                setIsIntentMenuOpen(false);
+                              }}
+                              className="w-full px-3 py-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-100/70 transition-colors cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <HeygenTargetIcon className="w-4 h-4 text-slate-700 shrink-0" />
+                                <span className="text-sm font-semibold text-slate-800">{item.label}</span>
+                              </div>
+                              {editIntent === item.key && <HeygenCheckCircle className="w-4 h-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
