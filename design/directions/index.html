@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova One · Dizayn yo'nalishlari</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #EFEFF1; color: #111; font: 400 15px/1.55 "Geist", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: clamp(26px, 3vw, 34px); letter-spacing: -0.02em; margin: 0 0 8px; }
+  .lead { color: #555; max-width: 70ch; margin: 0 0 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  a.card { display: block; background: #fff; border-radius: 16px; overflow: hidden; color: inherit; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: transform .2s, box-shadow .2s; }
+  a.card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.1); }
+  .frame { position: relative; aspect-ratio: 16/10; overflow: hidden; background: #ddd; }
+  .frame iframe { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .txt { padding: 16px 18px 20px; }
+  .txt h2 { font-size: 18px; margin: 0 0 4px; }
+  .txt p { margin: 0; color: #555; font-size: 14px; }
+  .how { margin-top: 36px; background: #fff; border-radius: 16px; padding: 20px 22px; }
+  .how h3 { margin: 0 0 8px; font-size: 16px; }
+  .how ol { margin: 0; padding-left: 20px; color: #444; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Storyboard ekrani — 3 xil yo'nalish</h1>
+  <p class="lead">Bu mahsulotning eng muhim ekrani: agent reja tuzib bo'lgach, mijoz uni o'qiydi, izoh qoldiradi va tasdiqlaydi. Uchala variantda ham kontent bir xil, faqat uslub va joylashuv farq qiladi. Kartochkani bosib oching.</p>
+  <div class="grid">
+    <a class="card" href="a-paper.html"><div class="frame"><iframe src="a-paper.html" tabindex="-1" loading="lazy"></iframe></div>
+      <div class="txt"><h2>A · Paper</h2><p>Iliq qog'oz rang, katta serif sarlavhalar, keng bo'sh joy. Jurnal kabi tinch — reja "hujjat" sifatida o'qiladi.</p></div></a>
+    <a class="card" href="b-studio.html"><div class="frame"><iframe src="b-studio.html" tabindex="-1" loading="lazy"></iframe></div>
+      <div class="txt"><h2>B · Studio</h2><p>CapCut / After Effects ruhida, lekin minimal: qorong'i fon, markazda katta kadr, pastda sahnalar tasmasi. Video — asosiy qahramon.</p></div></a>
+    <a class="card" href="c-canvas.html"><div class="frame"><iframe src="c-canvas.html" tabindex="-1" loading="lazy"></iframe></div>
+      <div class="txt"><h2>C · Canvas</h2><p>HeyGen ruhida: oq, ochiq, yumshoq kartochkalar. Pastda "Describe a change" chat maydoni — oddiy mijozga eng tanish ko'rinish.</p></div></a>
+  </div>
+  <div class="how">
+    <h3>Har birida nimani sinab ko'rish kerak</h3>
+    <ol>
+      <li>Birorta kadrga <b>Comment</b> yozing — asosiy tugma "Approve &amp; build" dan "Send 1 comment" ga o'zgaradi.</li>
+      <li>B variantida pastdagi sahnalarni bosing yoki klaviaturadagi ← → tugmalaridan foydalaning.</li>
+      <li>Oynani toraytirib ko'ring — telefon kengligida ham ishlashi kerak.</li>
+      <li>Pastdagi qora panel orqali variantlar orasida o'ting.</li>
+    </ol>
+  </div>
+</main>
+<script>
+  const fit = () => document.querySelectorAll(".frame").forEach(f => f.querySelector("iframe").style.transform = `scale(${f.clientWidth / 1440})`);
+  addEventListener("resize", fit); fit();
+</script>
+</body>
+</html>

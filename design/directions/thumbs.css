@@ -1,0 +1,43 @@
+/* CSS mini-frames — placeholder art for storyboard thumbnails. Scales with its box via cqw. */
+.thumb { container-type: inline-size; aspect-ratio: 16/9; width: 100%; position: relative; overflow: hidden; background: #101218; color: #F7F7F8; font-family: "Geist", system-ui, sans-serif; }
+.thumb > div { position: absolute; inset: 0; display: grid; place-items: center; }
+
+.t-type { padding: 0 10cqw; }
+.t-type span { font-size: 6.4cqw; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; text-align: center; }
+.t-type i { display: inline-block; width: 0.8cqw; height: 5.6cqw; margin-left: 1cqw; vertical-align: -0.6cqw; background: #4F7CFF; }
+
+.thumb--stack { background: #2A2D35; }
+.t-stack b { position: absolute; width: 46cqw; height: 28cqw; border-radius: 1.4cqw; background: #444852; border: 0.4cqw solid #5A5F6B; filter: blur(0.25cqw); }
+.t-stack b:nth-child(1) { transform: translate(-14cqw, -6cqw) rotate(-6deg); }
+.t-stack b:nth-child(2) { transform: translate(10cqw, 2cqw) rotate(4deg); }
+.t-stack b:nth-child(3) { transform: translate(-2cqw, 9cqw) rotate(-1deg); background: #52565F; }
+
+.thumb--logo { background: #F7F7F8; color: #101218; }
+.t-logo { grid-auto-flow: column; gap: 3cqw; place-content: center; }
+.t-logo em, .t-cta em { width: 11cqw; height: 11cqw; border-radius: 50%; background: #4F7CFF; box-shadow: inset 0 0 0 2.6cqw #F7F7F8, 0 0 0 1.2cqw #4F7CFF; }
+.t-logo span { font-size: 11cqw; font-weight: 700; letter-spacing: -0.05em; }
+
+.thumb--ui { background: #C9D3E6; }
+.t-win { position: absolute; left: 12cqw; top: 10cqw; width: 76cqw; height: 42cqw; border-radius: 1.6cqw; background: #F7F7F8; padding: 6cqw 5cqw 0; display: grid; gap: 2.4cqw; align-content: start; }
+.t-win s { display: block; height: 3cqw; border-radius: 1cqw; background: #DDE2EC; }
+.t-win s:first-child { width: 60%; background: #101218; }
+.t-pill { position: absolute; bottom: 7cqw; background: #101218; color: #F7F7F8; font-size: 3.6cqw; padding: 2cqw 4cqw; border-radius: 10cqw; font-family: "Geist Mono", monospace; }
+
+.thumb--split { background: #F7F7F8; }
+.t-split { grid-template-columns: 1fr 1fr; gap: 4cqw; padding: 12cqw 8cqw; place-items: stretch !important; }
+.t-code { height: 100%; background: #101218; border-radius: 1.6cqw; padding: 4cqw; display: grid; gap: 2cqw; align-content: start; }
+.t-code s { display: block; height: 2.2cqw; border-radius: 1cqw; background: #4F7CFF; opacity: 0.8; }
+.t-code s:nth-child(2) { width: 70%; background: #C9D3E6; } .t-code s:nth-child(3) { width: 85%; background: #C9D3E6; } .t-code s:nth-child(4) { width: 40%; }
+.t-toggle { place-self: center; width: 22cqw; height: 12cqw; border-radius: 10cqw; background: #4F7CFF; position: relative; }
+.t-toggle em { position: absolute; right: 1.5cqw; top: 1.5cqw; width: 9cqw; height: 9cqw; border-radius: 50%; background: #F7F7F8; }
+
+.t-cta { place-content: center; grid-auto-flow: row; gap: 2.4cqw; justify-items: center; align-content: center; }
+.t-cta em { width: 8cqw; height: 8cqw; box-shadow: inset 0 0 0 2cqw #101218, 0 0 0 0.9cqw #4F7CFF; }
+.t-cta span { font-size: 8cqw; font-weight: 700; letter-spacing: -0.04em; }
+.t-cta b { display: inline-block; background: #4F7CFF; color: #fff; font-size: 3.4cqw; padding: 1.8cqw 5cqw; border-radius: 10cqw; font-weight: 600; }
+
+/* Direction switcher */
+.dir-switch { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 99; display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: rgba(20,20,22,.88); backdrop-filter: blur(12px); font: 500 12px/1 "Geist", system-ui, sans-serif; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+.dir-switch a { color: #bdbdc2; text-decoration: none; padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+.dir-switch a:hover { color: #fff; }
+.dir-switch a.on { background: #fff; color: #111; }

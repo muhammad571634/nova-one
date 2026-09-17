@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova One · B · Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="thumbs.css">
+<style>
+  :root {
+    --bg: #0A0A0B; --panel: #121214; --raise: #1A1A1D; --line: #232327; --line-2: #2E2E33;
+    --text: #EDEDEF; --muted: #8B8B93; --faint: #5C5C63; --accent: #D4FF4F; --accent-ink: #0A0A0B;
+    --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; cursor: pointer; color: inherit; }
+
+  .shell { display: grid; grid-template-rows: auto auto 1fr auto; height: 100vh; }
+  .top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--accent-ink); font-weight: 700; font-size: 13px; flex: none; }
+  .pname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip { font-size: 12px; color: var(--accent); background: rgba(212,255,79,.08); border: 1px solid rgba(212,255,79,.2); padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+  .seg button { background: none; border: 0; padding: 6px 14px; border-radius: 6px; color: var(--muted); font-weight: 500; }
+  .seg button.on { background: var(--raise); color: var(--text); box-shadow: 0 0 0 1px var(--line-2); }
+  .seg button[disabled] { cursor: not-allowed; color: var(--faint); }
+  .seg small { font-size: 11px; margin-left: 6px; color: var(--faint); }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .btn { border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 600; white-space: nowrap; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost { background: var(--raise); box-shadow: inset 0 0 0 1px var(--line-2); font-weight: 500; }
+
+  .steps { display: flex; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .steps span { padding: 9px 10px; font-size: 12px; color: var(--faint); display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .steps span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+  .steps .done { color: var(--muted); } .steps .done::before { background: var(--muted); }
+  .steps .now { color: var(--text); } .steps .now::before { background: var(--accent); box-shadow: 0 0 0 3px rgba(212,255,79,.18); }
+
+  .work { display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  .shell > *, .work > * { min-width: 0; }
+  .stage { display: grid; place-items: center; padding: 28px; min-height: 0; overflow: auto; }
+  .viewer { width: min(100%, calc((100vh - 430px) * 16 / 9)); min-width: 280px; }
+  .screen { position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(0,0,0,.5); }
+  .sub { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); max-width: 80%; background: rgba(10,10,11,.72); backdrop-filter: blur(6px); padding: 6px 12px; border-radius: 8px; font-size: clamp(12px, 1.3vw, 16px); text-align: center; }
+  .under { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+  .under h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .under .tc { font: 400 12px var(--mono); color: var(--muted); }
+  .nav { display: flex; gap: 6px; }
+  .nav button { width: 32px; height: 32px; border-radius: 8px; border: 0; background: var(--raise); box-shadow: inset 0 0 0 1px var(--line-2); }
+
+  .insp { border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+  .sec { padding: 18px 18px 20px; border-bottom: 1px solid var(--line); }
+  .lbl { font: 500 11px/1 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+  .msg { font-size: 16px; font-weight: 500; line-height: 1.35; margin: 0; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; }
+  .scene, .vo { margin: 0; color: var(--muted); }
+  .vo { color: var(--text); margin-top: 10px; }
+  textarea { width: 100%; min-height: 96px; resize: vertical; background: var(--bg); border: 1px solid var(--line-2); border-radius: 8px; color: var(--text); font: inherit; padding: 10px 12px; outline: none; }
+  textarea:focus { border-color: var(--accent); }
+  .hint { font-size: 12px; color: var(--faint); margin-top: 8px; }
+  .pal { display: flex; gap: 6px; }
+  .pal i { flex: 1; height: 28px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+
+  .timeline { border-top: 1px solid var(--line); background: var(--panel); padding: 10px 16px 64px; }
+  .ruler { display: flex; font: 400 10px var(--mono); color: var(--faint); margin-bottom: 6px; }
+  .track { display: flex; gap: 4px; }
+  .clip { position: relative; min-width: 0; background: var(--raise); border-radius: 8px; padding: 5px; border: 0; text-align: left; box-shadow: inset 0 0 0 1px var(--line-2); }
+  .clip .thumb { border-radius: 4px; height: 54px; aspect-ratio: auto; }
+  .clip .cap { display: flex; justify-content: space-between; gap: 6px; padding: 6px 2px 1px; font-size: 12px; white-space: nowrap; }
+  .clip .cap b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+  .clip .cap span { font: 400 11px var(--mono); color: var(--faint); }
+  .clip.on { box-shadow: inset 0 0 0 2px var(--accent); }
+  .clip.has-c::after { content: ""; position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--raise); }
+
+  @media (max-width: 900px) {
+    .shell { height: auto; }
+    .top { grid-template-columns: 1fr; } .actions { justify-content: stretch; } .actions .btn { flex: 1; }
+    .work { grid-template-columns: 1fr; } .insp { border-left: 0; border-top: 1px solid var(--line); }
+    .stage { padding: 16px; } .viewer { width: 100%; min-width: 0; } .sub { display: none; }
+    .track { overflow-x: auto; } .clip { flex: none !important; width: 150px; } .ruler { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="id"><div class="mark">N</div><div class="pname" id="pname"></div><span class="chip">Waiting for your review</span></div>
+    <div class="seg"><button class="on">Storyboard</button><button disabled>Preview<small>after build</small></button></div>
+    <div class="actions"><button class="btn ghost" id="secondary">Send comments</button><button class="btn primary" id="primary">Approve &amp; build</button></div>
+  </header>
+  <div class="steps" id="steps"></div>
+
+  <div class="work">
+    <section class="stage">
+      <div class="viewer">
+        <div class="screen" id="screenEl"></div>
+        <div class="under">
+          <div><div class="tc" id="tc"></div><h2 id="ftitle"></h2></div>
+          <div class="nav"><button id="prev" aria-label="Previous frame">←</button><button id="next" aria-label="Next frame">→</button></div>
+        </div>
+      </div>
+    </section>
+    <aside class="insp">
+      <div class="sec"><div class="lbl">The one message</div><p class="msg" id="msg"></p></div>
+      <div class="sec">
+        <div class="lbl" id="flabel"></div>
+        <p class="scene" id="scene"></p>
+        <p class="vo" id="vo"></p>
+      </div>
+      <div class="sec">
+        <div class="lbl">Comment on this frame</div>
+        <textarea id="comment" placeholder="e.g. Make the headline shorter"></textarea>
+        <div class="hint">Comments are applied to the plan before anything is built.</div>
+      </div>
+      <div class="sec">
+        <div class="lbl">Video</div>
+        <dl class="kv" id="kv"></dl>
+      </div>
+      <div class="sec"><div class="lbl">Brand palette</div><div class="pal" id="pal"></div></div>
+    </aside>
+  </div>
+
+  <footer class="timeline">
+    <div class="ruler" id="ruler"></div>
+    <div class="track" id="track"></div>
+  </footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  const N = NOVA, P = N.project, F = N.frames, comments = {};
+  const total = F.reduce((a, f) => a + f.dur, 0);
+  let sel = 0;
+  pname.textContent = P.name; msg.textContent = N.message;
+  steps.innerHTML = N.steps.map((s, i) => `<span class="${i < N.current ? "done" : i === N.current ? "now" : ""}">${s}</span>`).join("");
+  kv.innerHTML = [["Source", P.url], ["Length", P.length], ["Voice", P.voice], ["Style", P.preset], ["Frames", F.length]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  pal.innerHTML = N.palette.map(c => `<i title="${c.name} ${c.hex}" style="background:${c.hex}"></i>`).join("");
+  ruler.innerHTML = F.map((f, i) => `<span style="flex:${f.dur}">${novaFmt(novaStart(i))}</span>`).join("");
+  track.innerHTML = F.map((f, i) => `<button class="clip" style="flex:${f.dur}" data-i="${i}">${novaThumb(f)}<div class="cap"><b>${f.role}</b><span>${f.dur}s</span></div></button>`).join("");
+
+  function show(i) {
+    sel = (i + F.length) % F.length; const f = F[sel];
+    screenEl.innerHTML = novaThumb(f) + `<div class="sub">${f.vo}</div>`;
+    tc.textContent = `Frame ${f.id} · ${novaFmt(novaStart(sel))} – ${novaFmt(novaStart(sel) + f.dur)}`;
+    ftitle.textContent = f.title; flabel.textContent = `${f.role} · ${f.dur}s`;
+    scene.textContent = f.scene; vo.textContent = `“${f.vo}”`;
+    comment.value = comments[f.id] || "";
+    track.querySelectorAll(".clip").forEach((c, j) => c.classList.toggle("on", j === sel));
+  }
+  function refresh() {
+    const n = Object.values(comments).filter(v => v.trim()).length;
+    primary.textContent = n ? `Send ${n} comment${n > 1 ? "s" : ""}` : "Approve & build";
+    secondary.textContent = "Approve & build"; secondary.style.display = n ? "" : "none";
+    track.querySelectorAll(".clip").forEach((c, j) => c.classList.toggle("has-c", !!(comments[F[j].id] || "").trim()));
+  }
+  track.addEventListener("click", e => { const c = e.target.closest(".clip"); if (c) show(+c.dataset.i); });
+  prev.onclick = () => show(sel - 1); next.onclick = () => show(sel + 1);
+  comment.addEventListener("input", () => { comments[F[sel].id] = comment.value; refresh(); });
+  document.addEventListener("keydown", e => { if (e.target.tagName === "TEXTAREA") return; if (e.key === "ArrowLeft") show(sel - 1); if (e.key === "ArrowRight") show(sel + 1); });
+  show(0); refresh();
+</script>
+</body>
+</html>

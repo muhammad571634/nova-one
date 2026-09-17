@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova One · A · Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="thumbs.css">
+<style>
+  :root {
+    --bg: #F6F4EF; --surface: #FFFFFF; --ink: #16150F; --muted: #6E6B62; --faint: #A09C91;
+    --line: #E4E0D6; --accent: #FF4F1F; --accent-soft: #FFE9E1;
+    --serif: "Instrument Serif", Georgia, serif; --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; cursor: pointer; }
+
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+  .rail { position: sticky; top: 0; height: 100vh; padding: 28px 20px; display: flex; flex-direction: column; gap: 36px; border-right: 1px solid var(--line); }
+  .brand { font: 400 26px/1 var(--serif); letter-spacing: -0.01em; }
+  .brand i { color: var(--accent); }
+  .nav { display: grid; gap: 2px; }
+  .nav a { color: var(--muted); text-decoration: none; padding: 8px 10px; border-radius: 8px; font-weight: 500; }
+  .nav a:hover { color: var(--ink); background: rgba(0,0,0,.035); }
+  .nav a.on { color: var(--ink); background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+  .credits { margin-top: auto; font-size: 13px; color: var(--muted); }
+  .credits b { display: block; color: var(--ink); font: 400 28px/1.1 var(--serif); }
+
+  main { padding: 40px clamp(20px, 5vw, 72px) 140px; max-width: 1180px; width: 100%; }
+  .crumb { font-size: 13px; color: var(--muted); }
+  .crumb a { color: inherit; text-decoration: none; }
+  h1 { font: 400 clamp(40px, 5.4vw, 64px)/1 var(--serif); letter-spacing: -0.02em; margin: 14px 0 16px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 14px; }
+  .meta span::before { content: "·"; margin-right: 18px; color: var(--faint); }
+  .meta span:first-child::before { display: none; }
+
+  .steps { display: flex; gap: 0; margin: 36px 0 56px; border-top: 1px solid var(--line); }
+  .steps li { list-style: none; flex: 1; padding-top: 12px; font-size: 13px; color: var(--faint); position: relative; }
+  .steps li::before { content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 2px; }
+  .steps li.done { color: var(--muted); } .steps li.done::before { background: var(--ink); }
+  .steps li.now { color: var(--ink); font-weight: 600; } .steps li.now::before { background: var(--accent); }
+  .steps ol { display: contents; }
+
+  .intro { display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; align-items: end; margin-bottom: 64px; }
+  .eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .message { font: italic 400 clamp(28px, 3.4vw, 40px)/1.15 var(--serif); margin: 0; }
+  .arc { font-size: 14px; color: var(--muted); margin: 0 0 22px; }
+  .swatches { display: flex; gap: 10px; }
+  .sw { display: grid; gap: 6px; font-size: 11px; color: var(--muted); }
+  .sw i { width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+
+  .frames { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--ink); }
+  .frame { display: grid; grid-template-columns: 56px 260px 1fr auto; gap: 28px; padding: 28px 0; border-bottom: 1px solid var(--line); align-items: start; }
+  .num { font: 400 13px/1 var(--mono); color: var(--faint); padding-top: 4px; }
+  .frame .thumb { border-radius: 6px; }
+  .role { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .ftitle { font: 400 28px/1.1 var(--serif); margin: 8px 0 10px; }
+  .scene { color: var(--muted); font-size: 14px; margin: 0 0 12px; max-width: 52ch; }
+  .vo { margin: 0; font-size: 15px; padding-left: 14px; border-left: 2px solid var(--line); max-width: 52ch; }
+  .side { text-align: right; display: grid; gap: 14px; justify-items: end; }
+  .dur { font: 400 13px/1 var(--mono); color: var(--muted); }
+  .cbtn { background: none; border: 0; color: var(--muted); font-size: 13px; padding: 4px 0; border-bottom: 1px solid transparent; }
+  .cbtn:hover { color: var(--ink); border-color: var(--ink); }
+  .frame.has-c .cbtn { color: var(--accent); }
+  .cbox { grid-column: 3 / -1; display: none; }
+  .frame.open .cbox { display: block; }
+  .cbox textarea { width: 100%; min-height: 76px; resize: vertical; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 12px 14px; font: inherit; color: inherit; outline: none; }
+  .cbox textarea:focus { border-color: var(--ink); }
+
+  .bar { position: fixed; left: 220px; right: 0; bottom: 0; background: rgba(246,244,239,.9); backdrop-filter: blur(10px); border-top: 1px solid var(--line); padding: 14px clamp(20px, 5vw, 72px) 14px; display: flex; align-items: center; gap: 16px; padding-bottom: 64px; }
+  .bar .sum { color: var(--muted); font-size: 14px; margin-right: auto; }
+  .btn { border: 0; border-radius: 999px; padding: 12px 22px; font-weight: 500; }
+  .btn.primary { background: var(--ink); color: var(--bg); }
+  .btn.primary:hover { background: #000; }
+  .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--ink); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .rail { position: static; height: auto; flex-direction: row; align-items: center; padding: 14px 16px; gap: 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+    .nav { display: flex; } .credits { display: none; }
+    .intro { grid-template-columns: 1fr; gap: 28px; }
+    .frame { grid-template-columns: 1fr; gap: 14px; }
+    .num { display: none; } .side { justify-items: start; text-align: left; grid-auto-flow: column; }
+    .cbox { grid-column: 1; }
+    .bar { left: 0; flex-wrap: wrap; } .bar .sum { width: 100%; }
+    .steps li { font-size: 0; } .steps li.now { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">Nova<i>.</i></div>
+    <nav class="nav"><a class="on" href="#">Projects</a><a href="#">New video</a><a href="#">Billing</a></nav>
+    <div class="credits"><b>12</b>credits left</div>
+  </aside>
+  <main>
+    <div class="crumb"><a href="#">Projects</a> / Cap</div>
+    <h1 id="title"></h1>
+    <div class="meta" id="meta"></div>
+    <ol class="steps" id="steps"></ol>
+
+    <section class="intro">
+      <div><div class="eyebrow">The one message</div><p class="message" id="message"></p></div>
+      <div><div class="eyebrow">Story arc</div><p class="arc" id="arc"></p><div class="swatches" id="palette"></div></div>
+    </section>
+
+    <div class="eyebrow">Your storyboard — read it, comment on any frame, then approve</div>
+    <ol class="frames" id="frameList"></ol>
+  </main>
+</div>
+<div class="bar">
+  <div class="sum" id="sum"></div>
+  <button class="btn ghost" id="secondary">Send comments</button>
+  <button class="btn primary" id="primary">Approve &amp; build</button>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  const N = NOVA, P = N.project, comments = {};
+  title.textContent = P.name;
+  meta.innerHTML = [P.url, P.length, P.voice, P.preset].map(x => `<span>${x}</span>`).join("");
+  steps.innerHTML = N.steps.map((s, i) => `<li class="${i < N.current ? "done" : i === N.current ? "now" : ""}">${s}</li>`).join("");
+  message.textContent = N.message; arc.textContent = N.arc;
+  palette.innerHTML = N.palette.map(c => `<div class="sw"><i style="background:${c.hex}"></i>${c.name}</div>`).join("");
+  frameList.innerHTML = N.frames.map((f, i) => `
+    <li class="frame" data-id="${f.id}">
+      <div class="num">${f.id}</div>
+      ${novaThumb(f)}
+      <div>
+        <div class="role">${f.role}</div>
+        <h2 class="ftitle">${f.title}</h2>
+        <p class="scene">${f.scene}</p>
+        <p class="vo">“${f.vo}”</p>
+      </div>
+      <div class="side"><span class="dur">${novaFmt(novaStart(i))} · ${f.dur}s</span><button class="cbtn">Comment</button></div>
+      <div class="cbox"><textarea placeholder="What should change in frame ${f.id}?"></textarea></div>
+    </li>`).join("");
+
+  function refresh() {
+    const n = Object.values(comments).filter(v => v.trim()).length;
+    sum.textContent = n ? `${n} comment${n > 1 ? "s" : ""} — the plan will be revised before building` : `${N.frames.length} frames · ${P.length} · nothing is built until you approve`;
+    primary.textContent = n ? `Send ${n} comment${n > 1 ? "s" : ""}` : "Approve & build";
+    secondary.textContent = "Approve & build"; secondary.style.display = n ? "" : "none";
+  }
+  frameList.addEventListener("click", e => {
+    if (!e.target.closest(".cbtn")) return;
+    const li = e.target.closest(".frame"); li.classList.toggle("open");
+    if (li.classList.contains("open")) li.querySelector("textarea").focus();
+  });
+  frameList.addEventListener("input", e => {
+    const li = e.target.closest(".frame"); comments[li.dataset.id] = e.target.value;
+    li.classList.toggle("has-c", !!e.target.value.trim());
+    li.querySelector(".cbtn").textContent = e.target.value.trim() ? "Commented" : "Comment";
+    refresh();
+  });
+  refresh();
+</script>
+</body>
+</html>
