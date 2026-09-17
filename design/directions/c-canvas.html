@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nova One · C · Canvas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Onest:wght@400;500;600&family=Geist:wght@500&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Geist:wght@500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="thumbs.css">
 <style>
   :root {
     --bg: #F7F8FA; --surface: #FFFFFF; --ink: #0E1116; --muted: #5F6878; --faint: #98A0AE;
     --line: #E8EBF0; --accent: #2B59FF; --accent-soft: #EDF1FF; --ok: #12A56B;
-    --display: "Bricolage Grotesque", system-ui, sans-serif; --sans: "Onest", system-ui, sans-serif;
+    --display: "Plus Jakarta Sans", "Bricolage Grotesque", system-ui, sans-serif;
+    --sans: "Onest", system-ui, sans-serif;
     --r: 16px; --shadow: 0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.04);
   }
   * { box-sizing: border-box; }
@@ -35,7 +37,7 @@
   main { padding: 28px clamp(16px, 4vw, 48px) 150px; max-width: 1240px; width: 100%; min-width: 0; }
   .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   .crumb { font-size: 13px; color: var(--faint); margin-bottom: 6px; }
-  h1 { font: 600 clamp(28px, 3.2vw, 36px)/1.1 var(--display); letter-spacing: -0.025em; margin: 0; }
+  h1 { font: 700 clamp(28px, 3.2vw, 36px)/1.1 var(--display); letter-spacing: -0.025em; margin: 0; }
   .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; font-weight: 500; color: var(--accent); background: var(--accent-soft); padding: 5px 12px 5px 10px; border-radius: 999px; }
   .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(43,89,255,.2); }
   .btns { display: flex; gap: 8px; }
@@ -56,29 +58,279 @@
   .facts { display: grid; gap: 4px; font-size: 14px; } .facts span { color: var(--muted); }
   .pal { display: flex; gap: 8px; } .pal i { width: 36px; height: 36px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
 
-  .gridhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-  .gridhead h2 { font: 600 18px/1 var(--display); margin: 0; }
-  .gridhead span { font-size: 13px; color: var(--muted); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
-  .card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(16,24,40,.04), 0 12px 32px rgba(16,24,40,.08); }
-  .card .media { position: relative; padding: 8px 8px 0; }
-  .card .thumb { border-radius: 10px; }
-  .badge { position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,.92); color: var(--ink); font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
-  .time { position: absolute; top: 16px; right: 16px; background: rgba(14,17,22,.7); color: #fff; font: 500 11px "Geist Mono", monospace; padding: 4px 8px; border-radius: 999px; }
-  .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-  .body h3 { font: 600 17px/1.25 var(--display); letter-spacing: -0.01em; margin: 0; }
-  .body .scene { font-size: 13px; color: var(--muted); margin: 0; }
-  .body .vo { font-size: 14px; margin: 2px 0 0; padding: 10px 12px; background: var(--bg); border-radius: 10px; display: flex; gap: 8px; }
-  .body .vo svg { color: var(--faint); width: 16px; height: 16px; margin-top: 2px; }
-  .add { margin-top: auto; align-self: flex-start; background: none; border: 0; padding: 6px 0 0; font-size: 13px; font-weight: 500; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
-  .add svg { width: 15px; height: 15px; }
-  .add:hover, .card.has-c .add { color: var(--accent); }
-  .card textarea { display: none; width: 100%; min-height: 70px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; outline: none; }
-  .card.open textarea { display: block; }
-  .card textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  /* Grid header with switcher */
+  .gridhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+  .gridhead h2 { font: 700 20px/1 var(--display); margin: 0; letter-spacing: -0.02em; }
+  .gridhead .meta-wrap { display: flex; align-items: center; gap: 12px; }
+  .gridhead span.count { font-size: 13px; color: var(--muted); font-weight: 500; }
+  
+  .view-toggle { display: inline-flex; padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .view-toggle button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; color: var(--muted); transition: all .15s ease; cursor: pointer; }
+  .view-toggle button.active { background: var(--ink); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
 
-  .composer { position: fixed; left: calc(248px + (100vw - 248px) / 2); transform: translateX(-50%); bottom: 64px; width: min(720px, calc(100vw - 248px - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 40px rgba(16,24,40,.12); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; }
+  /* 3-column Card Grid matching Image 2 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 680px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  /* 1:1 Card matching Image 2 */
+  .card {
+    position: relative;
+    aspect-ratio: 16 / 9.6;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #181A20;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 38px -8px rgba(0, 0, 0, 0.22);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Card media background */
+  .card-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card:hover .card-img {
+    transform: scale(1.03);
+  }
+
+  /* Multi-stop gradient vignette */
+  .card-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.12) 40%,
+      rgba(0, 0, 0, 0.06) 55%,
+      rgba(0, 0, 0, 0.65) 100%
+    );
+    pointer-events: none;
+    transition: background 0.3s ease;
+  }
+  .card:hover .card-gradient {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.62) 0%,
+      rgba(0, 0, 0, 0.18) 40%,
+      rgba(0, 0, 0, 0.12) 55%,
+      rgba(0, 0, 0, 0.72) 100%
+    );
+  }
+
+  /* Top Left Title */
+  .card-title {
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    max-width: 82%;
+    font-family: var(--display);
+    font-size: clamp(22px, 2.1vw, 26px);
+    font-weight: 800;
+    line-height: 1.14;
+    letter-spacing: -0.025em;
+    color: #FFFFFF;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Subtitle for scene mode */
+  .card-sub {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+    display: block;
+  }
+
+  /* Comment badge in top-right */
+  .card-comment-badge {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: rgba(43, 89, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: none;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(43, 89, 255, 0.4);
+  }
+  .card.has-c .card-comment-badge {
+    display: inline-flex;
+  }
+
+  /* Bottom Left Frosted Glass Pill Button */
+  .card-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    color: #FFFFFF;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+  }
+  .card-btn .arr {
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 700;
+    transition: transform 0.2s ease;
+  }
+  .card-btn:hover {
+    background: rgba(255, 255, 255, 0.36);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: scale(1.04);
+  }
+  .card-btn:hover .arr {
+    transform: translateX(2px);
+  }
+
+  /* Interactive Drawer for scene feedback / comments */
+  .card-drawer {
+    position: absolute;
+    inset: 0;
+    background: rgba(14, 17, 22, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card.open .card-drawer {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .drawer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+  }
+  .drawer-head h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .drawer-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: 0;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s ease;
+  }
+  .drawer-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  .drawer-vo {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #DDE2EC;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .drawer-vo svg {
+    color: var(--accent);
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+  }
+  .drawer-textarea {
+    flex: 1;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    resize: none;
+  }
+  .drawer-textarea:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .drawer-save {
+    align-self: flex-end;
+    background: var(--accent);
+    border: 0;
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .drawer-save:hover {
+    background: #2049E6;
+  }
+
+  /* Floating composer */
+  .composer { position: fixed; left: calc(248px + (100vw - 248px) / 2); transform: translateX(-50%); bottom: 64px; width: min(720px, calc(100vw - 248px - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 40px rgba(16,24,40,.12); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; z-index: 50; }
   .composer svg { color: var(--accent); }
   .composer input { flex: 1; border: 0; outline: none; font: inherit; background: none; min-width: 0; }
   .composer .btn { padding: 9px 14px; }
@@ -90,7 +342,6 @@
     .summary { grid-template-columns: 1fr; }
     .btns { width: 100%; } .btns .btn { flex: 1; justify-content: center; }
     .composer { left: 50%; width: calc(100vw - 32px); }
-    .grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -133,7 +384,17 @@
       <div><div class="k">Brand palette</div><div class="pal" id="pal"></div></div>
     </section>
 
-    <div class="gridhead"><h2>Scenes</h2><span id="count"></span></div>
+    <div class="gridhead">
+      <h2>Scenes</h2>
+      <div class="meta-wrap">
+        <div class="view-toggle">
+          <button class="active" id="btn-templates">Template Style</button>
+          <button id="btn-scenes">Cap Scenes</button>
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+    </div>
+    
     <div class="grid" id="grid"></div>
   </main>
 </div>
@@ -146,39 +407,174 @@
 <script src="shared.js"></script>
 <script>
   const N = NOVA, P = N.project, comments = {};
-  title.textContent = P.name; message.textContent = N.message;
+  title.textContent = P.name;
+  message.textContent = N.message;
   steps.innerHTML = N.steps.map((s, i) => i < N.current ? `<span class="done"><svg><use href="#i-check"/></svg>${s}</span>` : `<span class="${i === N.current ? "now" : ""}">${s}</span>`).join("");
   facts.innerHTML = [[P.length, "long"], [P.voice, ""], [P.preset, "style"]].map(([a, b]) => `<div>${a} <span>${b}</span></div>`).join("");
   pal.innerHTML = N.palette.map(c => `<i title="${c.name} ${c.hex}" style="background:${c.hex}"></i>`).join("");
   count.textContent = `${N.frames.length} scenes · ${P.length}`;
-  grid.innerHTML = N.frames.map((f, i) => `
-    <article class="card" data-id="${f.id}">
-      <div class="media">${novaThumb(f)}<span class="badge">${f.id} · ${f.role}</span><span class="time">${novaFmt(novaStart(i))} · ${f.dur}s</span></div>
-      <div class="body">
-        <h3>${f.title}</h3>
-        <p class="scene">${f.scene}</p>
-        <p class="vo"><svg><use href="#i-mic"/></svg><span>${f.vo}</span></p>
-        <textarea placeholder="What should change in this scene?"></textarea>
-        <button class="add"><svg><use href="#i-msg"/></svg><span>Add comment</span></button>
-      </div>
-    </article>`).join("");
+
+  // 1:1 Cards matching Image 2
+  const TEMPLATES = [
+    {
+      id: "01",
+      titleHtml: "Ads &amp; Promo",
+      sceneTitle: "Your next demo shouldn't take a day",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #D47355, #8C3E26)",
+      role: "01 · Hook",
+      vo: "Recording a product demo shouldn't eat your whole afternoon.",
+      dur: 5
+    },
+    {
+      id: "02",
+      titleHtml: "Educational<br>Video",
+      sceneTitle: "Slow tools, heavy files, closed platforms",
+      image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #B58A6A, #66432A)",
+      role: "02 · Problem",
+      vo: "Most screen recorders are slow, bloated, and lock your videos away.",
+      dur: 7
+    },
+    {
+      id: "03",
+      titleHtml: "Expert<br>Explainer",
+      sceneTitle: "Meet Cap",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #3E6B52, #1C3326)",
+      role: "03 · Solution",
+      vo: "Meet Cap — the open-source way to record, edit, and share your screen.",
+      dur: 8
+    },
+    {
+      id: "04",
+      titleHtml: "Tips &amp; How-To",
+      sceneTitle: "Stop recording — the link is ready",
+      image: "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #A8988A, #574B40)",
+      role: "04 · Feature",
+      vo: "Hit stop, and your link is already on the clipboard.",
+      dur: 9
+    },
+    {
+      id: "05",
+      titleHtml: "News Brief<br>Video",
+      sceneTitle: "Open source. Your recordings, your storage.",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #2D4D7A, #122135)",
+      role: "05 · Proof",
+      vo: "It's open source, and you choose where every recording lives.",
+      dur: 8
+    },
+    {
+      id: "06",
+      titleHtml: "Video Podcast",
+      sceneTitle: "Start recording free",
+      image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=1000&q=85",
+      bgFallback: "linear-gradient(145deg, #282A32, #0E0F12)",
+      role: "06 · CTA",
+      vo: "Start recording for free at cap.so.",
+      dur: 6
+    }
+  ];
+
+  let currentMode = "templates"; // "templates" or "scenes"
+
+  function renderCards() {
+    grid.innerHTML = TEMPLATES.map((item, i) => {
+      const isTemplate = currentMode === "templates";
+      const displayTitle = isTemplate ? item.titleHtml : item.sceneTitle;
+      const subLabel = isTemplate ? "" : `<span class="card-sub">${item.role} · ${item.dur}s</span>`;
+      const btnText = "Create Now";
+      
+      return `
+      <article class="card" data-id="${item.id}" style="background: ${item.bgFallback}">
+        <img class="card-img" src="${item.image}" alt="${item.titleHtml.replace(/<[^>]*>/g, '')}" loading="lazy" onerror="this.style.display='none'">
+        <div class="card-gradient"></div>
+        <h3 class="card-title">${displayTitle}${subLabel}</h3>
+        <span class="card-comment-badge">✓ Commented</span>
+        <button class="card-btn" type="button">${btnText} <span class="arr">›</span></button>
+
+        <div class="card-drawer">
+          <div class="drawer-head">
+            <h4>${item.role} · ${item.dur}s</h4>
+            <button class="drawer-close" type="button">✕</button>
+          </div>
+          <div class="drawer-vo">
+            <svg><use href="#i-mic"/></svg>
+            <span>${item.vo}</span>
+          </div>
+          <textarea class="drawer-textarea" placeholder="What should change in this scene?">${comments[item.id] || ""}</textarea>
+          <button class="drawer-save" type="button">Save comment</button>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  // Toggle buttons
+  const btnTemplates = document.getElementById("btn-templates");
+  const btnScenes = document.getElementById("btn-scenes");
+
+  btnTemplates.addEventListener("click", () => {
+    currentMode = "templates";
+    btnTemplates.classList.add("active");
+    btnScenes.classList.remove("active");
+    renderCards();
+  });
+
+  btnScenes.addEventListener("click", () => {
+    currentMode = "scenes";
+    btnScenes.classList.add("active");
+    btnTemplates.classList.remove("active");
+    renderCards();
+  });
 
   function refresh() {
     const n = Object.values(comments).filter(v => v.trim()).length + (global.value.trim() ? 1 : 0);
     primary.innerHTML = n ? `Send ${n} comment${n > 1 ? "s" : ""}` : `<svg><use href="#i-check"/></svg>Approve &amp; build`;
     secondary.style.display = n ? "" : "none";
   }
+
+  // Card interaction
   grid.addEventListener("click", e => {
-    if (!e.target.closest(".add")) return;
-    const c = e.target.closest(".card"); c.classList.toggle("open");
-    if (c.classList.contains("open")) c.querySelector("textarea").focus();
+    const card = e.target.closest(".card");
+    if (!card) return;
+
+    if (e.target.closest(".drawer-close")) {
+      card.classList.remove("open");
+      return;
+    }
+
+    if (e.target.closest(".drawer-save")) {
+      const v = card.querySelector(".drawer-textarea").value.trim();
+      comments[card.dataset.id] = v;
+      card.classList.toggle("has-c", !!v);
+      card.classList.remove("open");
+      refresh();
+      return;
+    }
+
+    // Clicking button or card opens the detail drawer
+    if (e.target.closest(".card-btn") || (!card.classList.contains("open") && !e.target.closest(".card-drawer"))) {
+      // Close other cards first
+      document.querySelectorAll(".card.open").forEach(c => c !== card && c.classList.remove("open"));
+      card.classList.add("open");
+      card.querySelector(".drawer-textarea").focus();
+    }
   });
+
   grid.addEventListener("input", e => {
-    const c = e.target.closest(".card"), v = e.target.value.trim(); comments[c.dataset.id] = v;
-    c.classList.toggle("has-c", !!v); c.querySelector(".add span").textContent = v ? "Comment added" : "Add comment";
+    if (!e.target.classList.contains("drawer-textarea")) return;
+    const card = e.target.closest(".card");
+    const v = e.target.value.trim();
+    comments[card.dataset.id] = v;
+    card.classList.toggle("has-c", !!v);
     refresh();
   });
+
   global.addEventListener("input", refresh);
+  
+  renderCards();
   refresh();
 </script>
 </body>
