@@ -190,6 +190,40 @@ function HeygenCheckCircle({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
+// Modern Minimalist Prompt Ideas — Proven high-converting prompts that HyperFrames AI agent directly utilizes
+const PROMPT_IDEAS = [
+  {
+    id: 'fast_paced',
+    label: 'Fast-paced & punchy cuts',
+    prompt: 'Fast-paced & punchy cuts with high-energy transitions.',
+  },
+  {
+    id: 'step_by_step',
+    label: 'Explain features step-by-step',
+    prompt: 'Explain core features step-by-step with clear visual benefits.',
+  },
+  {
+    id: 'dark_mode',
+    label: 'Dark mode & neon glow',
+    prompt: 'Sleek dark mode interface with neon glow accents and high contrast.',
+  },
+  {
+    id: 'conversion',
+    label: 'Problem-first & high conversion',
+    prompt: 'Hook with core pain points, immediate solution, and strong CTA.',
+  },
+  {
+    id: 'typography',
+    label: 'Bold kinetic typography',
+    prompt: 'Bold kinetic typography with large stats and crisp callouts.',
+  },
+  {
+    id: 'dev_first',
+    label: 'Developer-first & API showcase',
+    prompt: 'Developer-first presentation highlighting fast workflow, code, and speed.',
+  },
+];
+
 interface MilestoneState {
   step: 'setup' | 'capture' | 'design' | 'storyboard' | 'building' | 'render' | 'ready';
   percentage: number;
@@ -1472,13 +1506,26 @@ export default function ProjectLiveTracker({
                   <label className="text-[15px] font-bold text-slate-900">
                     Video Details
                   </label>
-                  <span
-                    className={`text-xs font-mono tabular-nums ${
-                      editKeyMessage.length > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {editKeyMessage.length} / 500
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    {editKeyMessage.trim().length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setEditKeyMessage('')}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer border border-slate-200/70 hover:border-rose-200 shadow-2xs"
+                        title="Clear all text (Tozalash)"
+                      >
+                        <span className="text-[10px]">✕</span>
+                        <span>Clear</span>
+                      </button>
+                    )}
+                    <span
+                      className={`text-xs font-mono tabular-nums ${
+                        editKeyMessage.length > 450 ? 'text-amber-600 font-bold' : 'text-slate-400'
+                      }`}
+                    >
+                      {editKeyMessage.length} / 500
+                    </span>
+                  </div>
                 </div>
 
                 <div className="relative rounded-2xl border-2 border-sky-300 focus-within:border-[#00B4D8] focus-within:ring-4 focus-within:ring-[#00B4D8]/10 bg-white transition-all shadow-xs overflow-hidden">
@@ -1488,8 +1535,20 @@ export default function ProjectLiveTracker({
                     value={editKeyMessage}
                     onChange={(e) => setEditKeyMessage(e.target.value)}
                     placeholder="Type your script or a prompt for me to generate one for you"
-                    className="w-full p-4 pb-14 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none bg-transparent leading-relaxed"
+                    className="w-full p-4 pr-11 pb-14 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none bg-transparent leading-relaxed"
                   />
+
+                  {/* Top-Right: Quick Clear ✕ Button inside textarea box */}
+                  {editKeyMessage.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setEditKeyMessage('')}
+                      className="absolute top-3 right-3 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs group"
+                      title="Clear text (Tozalash)"
+                    >
+                      <span className="text-xs font-bold leading-none">✕</span>
+                    </button>
+                  )}
 
                   {/* Inside-bottom: Script Writer pill button matching HeyGen */}
                   <div className="absolute bottom-3 left-3.5 flex items-center gap-2">
@@ -1509,31 +1568,55 @@ export default function ProjectLiveTracker({
                   </div>
                 </div>
 
-                {/* Prompt Inspiration Chips */}
+                {/* Prompt Inspiration Ideas */}
                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                  <span className="text-xs text-slate-400 font-medium mr-1">Ideas:</span>
-                  {[
-                    'Dark mode & neon glow',
-                    'Fast-paced & punchy cuts',
-                    'No scraping, pure typography',
-                    'Explain features step-by-step',
-                  ].map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => {
-                        setEditKeyMessage((prev: string) => {
-                          const trimmed = prev.trim();
-                          if (!trimmed) return chip;
-                          if (trimmed.includes(chip)) return prev;
-                          return `${trimmed}. ${chip}`;
-                        });
-                      }}
-                      className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 font-medium transition-colors cursor-pointer border border-slate-200/60"
-                    >
-                      + {chip}
-                    </button>
-                  ))}
+                  <span className="text-xs font-semibold text-slate-400 shrink-0 mr-0.5">Ideas:</span>
+                  {PROMPT_IDEAS.map((idea) => {
+                    const isActive = editKeyMessage.includes(idea.prompt) || editKeyMessage.includes(idea.label);
+                    return (
+                      <button
+                        key={idea.id}
+                        type="button"
+                        onClick={() => {
+                          setEditKeyMessage((prev: string) => {
+                            const trimmed = prev.trim();
+                            if (!trimmed) return idea.prompt;
+                            if (trimmed.includes(idea.prompt)) {
+                              // Toggle off
+                              const stripped = trimmed
+                                .replace(idea.prompt, '')
+                                .replace(/\.\s*\./g, '.')
+                                .replace(/^\s*\.\s*/, '')
+                                .trim();
+                              return stripped;
+                            }
+                            if (trimmed.includes(idea.label)) {
+                              // Toggle off by label
+                              const stripped = trimmed
+                                .replace(idea.label, '')
+                                .replace(/\.\s*\./g, '.')
+                                .replace(/^\s*\.\s*/, '')
+                                .trim();
+                              return stripped;
+                            }
+                            const separator = trimmed.endsWith('.') ? ' ' : '. ';
+                            return `${trimmed}${separator}${idea.prompt}`.slice(0, 500);
+                          });
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer flex items-center gap-1.5 border active:scale-95 ${
+                          isActive
+                            ? 'bg-cyan-50/80 border-[#00B4D8]/80 text-[#007799] font-bold shadow-2xs ring-1 ring-[#00B4D8]/30'
+                            : 'bg-[#F1F5F9] hover:bg-[#E2E8F0] border-slate-200/80 text-slate-700 font-medium'
+                        }`}
+                        title={idea.prompt}
+                      >
+                        <span className={`text-[13px] leading-none ${isActive ? 'text-[#00B4D8] font-black' : 'text-slate-400'}`}>
+                          {isActive ? '✓' : '+'}
+                        </span>
+                        <span>{idea.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
