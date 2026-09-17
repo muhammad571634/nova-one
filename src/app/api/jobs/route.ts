@@ -36,25 +36,33 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { url, intent = 'promote', stylePreset = 'auto', length = '45s', voice = 'female', language = 'en', keyMessage } = body;
 
-    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    const hasUrl = typeof url === 'string' && url.trim().length > 0;
+    if (hasUrl && !url.trim().startsWith('http://') && !url.trim().startsWith('https://')) {
       return NextResponse.json(
-        { error: 'Please enter a valid website URL including http:// or https://' },
+        { error: 'Please enter a valid website URL starting with http:// or https://' },
+        { status: 400 }
+      );
+    }
+
+    if (!hasUrl && (!keyMessage || !keyMessage.trim())) {
+      return NextResponse.json(
+        { error: 'Please enter either a website URL or custom prompt instructions.' },
         { status: 400 }
       );
     }
 
     const briefConfig: BriefConfig = {
-      url: url.trim(),
+      url: hasUrl ? url.trim() : '',
       intent: intent === 'show_site' ? 'show_site' : 'promote',
       stylePreset: typeof stylePreset === 'string' ? stylePreset : 'auto',
-      length: ['30s', '45s', '60s'].includes(length) ? length : '45s',
+      length: ['15s', '30s', '45s', '60s'].includes(length) ? length : '45s',
       voice: voice === 'male' ? 'male' : 'female',
       language: typeof language === 'string' ? language : 'en',
       keyMessage: typeof keyMessage === 'string' ? keyMessage.trim() : undefined,
     };
 
     const briefMarkdown = generateBriefMarkdown(briefConfig);
-    const slug = slugifyUrl(briefConfig.url);
+    const slug = hasUrl ? slugifyUrl(briefConfig.url) : `video-${Date.now().toString(36)}`;
     const jobId = `job_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
 
     const jobDir = path.join('C:\\Users\\joray\\nova-one-data\\jobs', jobId);

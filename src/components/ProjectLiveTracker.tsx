@@ -280,7 +280,7 @@ export default function ProjectLiveTracker({
           </div>
           <p className="mt-1 text-xs text-slate-500 flex items-center gap-1.5 font-mono">
             <span>Target:</span>
-            {sourceUrl ? (
+            {sourceUrl && sourceUrl !== 'none' ? (
               <a
                 href={sourceUrl}
                 target="_blank"

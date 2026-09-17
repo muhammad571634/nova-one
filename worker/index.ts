@@ -64,7 +64,11 @@ async function processNextJob() {
     if (job.status === 'queued') {
       nextStatus = 'planning';
       kind = 'plan';
-      claudePrompt = `Use the product-launch-video skill. The project already exists at videos/${job.slug} and BRIEF.md there is confirmed. Source URL: ${job.source_url}.\nRun Step 0 through Step 3 and stop at the plan checkpoint.`;
+      const hasUrl = Boolean(job.source_url && job.source_url.trim() && job.source_url !== 'none');
+      const urlDirective = hasUrl
+        ? `Source URL: ${job.source_url}.`
+        : `No website URL provided. Follow the Step 1 no-capture path: do not scrape any web page, use preset design tokens, and generate scenes and script directly from BRIEF.md.`;
+      claudePrompt = `Use the product-launch-video skill. The project already exists at videos/${job.slug} and BRIEF.md there is confirmed. ${urlDirective}\nRun Step 0 through Step 3 and stop at the plan checkpoint.`;
     } else if (job.status === 'queued_revising') {
       nextStatus = 'revising';
       kind = 'revise';

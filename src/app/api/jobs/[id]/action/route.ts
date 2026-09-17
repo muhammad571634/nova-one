@@ -147,6 +147,24 @@ export async function POST(
         } catch {}
       }
 
+      // If brief was edited, clean up old plan artifacts so agent creates fresh storyboard
+      if (job.project_dir && fs.existsSync(job.project_dir)) {
+        const oldStoryboard = path.join(job.project_dir, "STORYBOARD.md");
+        const oldScript = path.join(job.project_dir, "SCRIPT.md");
+        const oldFrame = path.join(job.project_dir, "frame.md");
+        if (fs.existsSync(oldStoryboard)) try { fs.unlinkSync(oldStoryboard); } catch {}
+        if (fs.existsSync(oldScript)) try { fs.unlinkSync(oldScript); } catch {}
+        if (fs.existsSync(oldFrame)) try { fs.unlinkSync(oldFrame); } catch {}
+
+        // If URL was cleared or changed, remove old capture directory
+        if (!updatedConfig.url || updatedConfig.url !== currentBrief.url) {
+          const oldCapture = path.join(job.project_dir, "capture");
+          if (fs.existsSync(oldCapture)) {
+            try { fs.rmSync(oldCapture, { recursive: true, force: true }); } catch {}
+          }
+        }
+      }
+
       db.prepare(`
         UPDATE jobs 
         SET status = 'queued',
