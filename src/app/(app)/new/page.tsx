@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -22,8 +22,10 @@ import {
 import { STYLE_PRESETS, StylePreset } from '@/lib/presets';
 import { generateBriefMarkdown, BriefConfig } from '@/lib/brief';
 
-export default function NewVideoWizardPage() {
+function NewVideoWizardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromId = searchParams.get('from');
 
   // Wizard Step (1, 2, 3)
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -46,6 +48,7 @@ export default function NewVideoWizardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [recipeJob, setRecipeJob] = useState<{ id: string; slug: string; preset: string; aspect: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -57,6 +60,35 @@ export default function NewVideoWizardPage() {
       })
       .catch(() => {});
   }, []);
+
+  // F10: Load Recipe if 'from' query param exists
+  useEffect(() => {
+    if (!fromId) return;
+    fetch(`/api/jobs/${fromId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.job?.briefConfig) {
+          const bc = data.job.briefConfig;
+          if (bc.stylePreset) setStylePreset(bc.stylePreset);
+          if (bc.length) setLength(bc.length);
+          if (bc.voice) setVoice(bc.voice);
+          if (bc.intent) setIntent(bc.intent);
+          if (bc.aspect) setAspect(bc.aspect);
+          if (typeof bc.captions === 'boolean') setCaptions(bc.captions);
+          if (bc.brandColor) setBrandColor(bc.brandColor);
+          if (bc.brandName) setBrandName(bc.brandName);
+          setRecipeJob({
+            id: data.job.id,
+            slug: data.job.slug,
+            preset: bc.stylePreset || 'auto',
+            aspect: bc.aspect || '1920x1080',
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load recipe job:', err);
+      });
+  }, [fromId]);
 
   // Quick suggestions
   const sampleUrls = [
@@ -181,6 +213,33 @@ export default function NewVideoWizardPage() {
               <Sparkles className="w-3.5 h-3.5 text-amber-200" />
               <span>Upgrade Plan</span>
             </Link>
+          </div>
+        )}
+
+        {/* F10: Active Recipe Banner */}
+        {recipeJob && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent border border-cyan-300/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#0096C7] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-display font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+                  <span>Recipe Active:</span>
+                  <span className="text-[#0077B6] font-extrabold">{recipeJob.slug}</span>
+                </h4>
+                <p className="text-[11px] text-slate-600 mt-0.5">
+                  Pre-filled style preset <span className="font-semibold text-slate-800">({recipeJob.preset})</span>, voice, and <span className="font-semibold text-slate-800">{recipeJob.aspect}</span>. Enter your website URL below!
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRecipeJob(null)}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors shrink-0 cursor-pointer"
+            >
+              Clear Recipe
+            </button>
           </div>
         )}
 
@@ -704,5 +763,20 @@ export default function NewVideoWizardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function NewVideoWizardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-4xl mx-auto py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin text-cyan-600" />
+          <p className="text-xs font-semibold">Loading video wizard…</p>
+        </div>
+      }
+    >
+      <NewVideoWizardContent />
+    </Suspense>
   );
 }

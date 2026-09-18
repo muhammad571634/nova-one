@@ -38,7 +38,8 @@ import {
   Zap,
   Lock,
   CreditCard,
-  Shield
+  Shield,
+  Code
 } from 'lucide-react';
 import { ParsedStoryboard } from '@/lib/storyboard-parser';
 import SimpleVisualEditor from './SimpleVisualEditor';
@@ -309,6 +310,9 @@ export default function ProjectLiveTracker({
   const [modalUpgradeError, setModalUpgradeError] = useState<string | null>(null);
   const [modalUpgradeSuccess, setModalUpgradeSuccess] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [activeShareTab, setActiveShareTab] = useState<'link' | 'embed' | 'iframe' | 'script'>('link');
+  const [copiedShareItem, setCopiedShareItem] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<MilestoneState>({
     step: 'setup',
@@ -419,6 +423,12 @@ export default function ProjectLiveTracker({
       await fetch(`/api/jobs/${jobId}/studio`, { method: 'DELETE' });
       setStudioInfo({ isRunning: false });
     } catch {}
+  };
+
+  const copyShareContent = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedShareItem(label);
+    setTimeout(() => setCopiedShareItem(null), 2000);
   };
 
   // Dropdown / Popover states for option chips
@@ -866,6 +876,27 @@ export default function ProjectLiveTracker({
                 <Sliders className="w-3.5 h-3.5 text-slate-500" />
               )}
               <span>{isStudioLoading ? 'Starting…' : 'Open in Studio'}</span>
+            </button>
+          )}
+
+          <Link
+            href={`/new?from=${jobId}`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all shadow-2xs cursor-pointer"
+            title="Create another video using this visual style and voice settings"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>Use as Recipe</span>
+          </Link>
+
+          {(status === 'done' || hasRenderedVideo) && (
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-cyan-900 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-all shadow-2xs cursor-pointer"
+              title="Share or embed this video"
+            >
+              <Share2 className="w-3.5 h-3.5 text-cyan-600" />
+              <span>Share &amp; Embed</span>
             </button>
           )}
 
@@ -1632,6 +1663,24 @@ export default function ProjectLiveTracker({
                     <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
                     <span>Open in Tab</span>
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-cyan-200 bg-cyan-50/50 hover:bg-cyan-50 text-cyan-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-cyan-600" />
+                    <span>Share &amp; Embed</span>
+                  </button>
+
+                  <Link
+                    href={`/new?from=${jobId}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100/80 text-amber-900 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                    title="Create another video using this style and voice"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Use as Recipe</span>
+                  </Link>
 
                   <button
                     type="button"
@@ -2674,6 +2723,361 @@ export default function ProjectLiveTracker({
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* F10: Share & Embed Modal (Apple Minimalist) */}
+      {isShareModalOpen && (
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsShareModalOpen(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-200/60">
+                  <Share2 className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-extrabold text-base text-slate-900">
+                    Share &amp; Embed Video
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    1080p MP4 · {slug || 'Product Video'} · HTTP Range Streaming Ready
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="px-6 pt-3 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 overflow-x-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('link')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'link'
+                    ? 'border-cyan-600 text-cyan-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>Direct Link</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('embed')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'embed'
+                    ? 'border-cyan-600 text-cyan-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Code className="w-3.5 h-3.5" />
+                <span>HTML &lt;video&gt;</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('iframe')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'iframe'
+                    ? 'border-cyan-600 text-cyan-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Iframe Player</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveShareTab('script')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeShareTab === 'script'
+                    ? 'border-cyan-600 text-cyan-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Script &amp; Copy</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-4">
+              {/* Tab 1: Direct Link */}
+              {activeShareTab === 'link' && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
+                      Direct MP4 Video Stream URL
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/api/jobs/${jobId}/files/renders/video.mp4` : ''}
+                        className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono text-slate-700 select-all focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${window.location.origin}/api/jobs/${jobId}/files/renders/video.mp4`;
+                          copyShareContent(url, 'link');
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {copiedShareItem === 'link' ? (
+                          <>
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy URL</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-cyan-50/50 border border-cyan-100 flex items-start gap-2.5 text-xs text-cyan-950">
+                    <Zap className="w-4 h-4 text-cyan-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">HTTP Range Streaming Enabled:</span>
+                      <p className="text-[11px] text-cyan-900/80 mt-0.5">
+                        This URL supports byte-range requests (HTTP 206), enabling smooth scrub playback, dynamic buffering, and seamless compatibility with mobile browsers and apps.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center gap-3">
+                    <a
+                      href={`/api/jobs/${jobId}/files/renders/video.mp4?download=true`}
+                      download
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Download MP4 File</span>
+                    </a>
+                    <a
+                      href={`/api/jobs/${jobId}/files/renders/video.mp4`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Open in Browser Tab</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: HTML5 Video Tag */}
+              {activeShareTab === 'embed' && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Responsive HTML5 Snippet
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                          const snippet = `<video\n  controls\n  playsinline\n  width="100%"\n  style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.12);"\n  poster="${origin}/api/jobs/${jobId}/files/snapshots/contact-sheet.jpg"\n>\n  <source src="${origin}/api/jobs/${jobId}/files/renders/video.mp4" type="video/mp4" />\n  Your browser does not support HTML5 video.\n</video>`;
+                          copyShareContent(snippet, 'embed');
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 hover:text-cyan-700 cursor-pointer"
+                      >
+                        {copiedShareItem === 'embed' ? (
+                          <>
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Code</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre className="p-3.5 rounded-2xl bg-slate-900 text-slate-100 text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800">
+{`<video
+  controls
+  playsinline
+  width="100%"
+  style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.12);"
+  poster="${typeof window !== 'undefined' ? window.location.origin : ''}/api/jobs/${jobId}/files/snapshots/contact-sheet.jpg"
+>
+  <source src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/jobs/${jobId}/files/renders/video.mp4" type="video/mp4" />
+  Your browser does not support HTML5 video.
+</video>`}
+                    </pre>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Paste this snippet directly into Framer, Webflow, WordPress, Ghost, or your custom Next.js/HTML landing page.
+                  </p>
+                </div>
+              )}
+
+              {/* Tab 3: Iframe Player */}
+              {activeShareTab === 'iframe' && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Embedded Player Iframe
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                          const snippet = `<iframe\n  src="${origin}/projects/${jobId}"\n  width="100%"\n  height="540"\n  frameborder="0"\n  allow="autoplay; fullscreen; picture-in-picture"\n  style="border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden;"\n></iframe>`;
+                          copyShareContent(snippet, 'iframe');
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 hover:text-cyan-700 cursor-pointer"
+                      >
+                        {copiedShareItem === 'iframe' ? (
+                          <>
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Code</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre className="p-3.5 rounded-2xl bg-slate-900 text-slate-100 text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800">
+{`<iframe
+  src="${typeof window !== 'undefined' ? window.location.origin : ''}/projects/${jobId}"
+  width="100%"
+  height="540"
+  frameborder="0"
+  allow="autoplay; fullscreen; picture-in-picture"
+  style="border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden;"
+></iframe>`}
+                    </pre>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Embeds the full interactive player with scene timeline context and responsive video frame.
+                  </p>
+                </div>
+              )}
+
+              {/* Tab 4: Script & Copy */}
+              {activeShareTab === 'script' && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Full Voiceover Transcript
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fullScript = storyboard?.frames?.map(f => f.voiceover).filter(Boolean).join(' ') || theOneMessage;
+                          copyShareContent(fullScript, 'full_script');
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 hover:text-cyan-700 cursor-pointer"
+                      >
+                        {copiedShareItem === 'full_script' ? (
+                          <>
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Transcript</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed max-h-36 overflow-y-auto">
+                      {storyboard?.frames?.map(f => f.voiceover).filter(Boolean).join(' ') || theOneMessage}
+                    </div>
+                  </div>
+
+                  {storyboard?.frames && storyboard.frames.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          Scene-by-Scene Timings
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const breakdown = storyboard.frames.map(f => `[${f.duration}] ${f.title}\n${f.voiceover}`).join('\n\n');
+                            copyShareContent(breakdown, 'scene_breakdown');
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600 hover:text-cyan-700 cursor-pointer"
+                        >
+                          {copiedShareItem === 'scene_breakdown' ? (
+                            <>
+                              <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-emerald-600">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Breakdown</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {storyboard.frames.map((frame, idx) => (
+                          <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-xs">
+                            <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase mb-1">
+                              <span>Scene {idx + 1} · {frame.title}</span>
+                              <span className="font-mono text-slate-600">{frame.duration}</span>
+                            </div>
+                            <p className="text-slate-800 font-medium text-[11px] leading-snug">
+                              "{frame.voiceover}"
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-400">
+                1080p · MP4 · Audio AAC Stereo
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

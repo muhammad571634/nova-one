@@ -557,7 +557,7 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 | Bulutda render | Lambda yoki Cloud Run (repoda tayyor) |
 | Saqlash va CDN | S3 yoki R2 |
 | Haqiqiy global to'lov | Stripe ko'rsatilgan davlatda ro'yxatdan o'tgan kompaniyani talab qiladi. Muqobili — merchant of record (Paddle, Lemon Squeezy). Qarorni keyin qabul qilamiz |
-| Recipe (qayta ishlatish) | `recipe.mjs freeze` — "shu uslubda yana bitta" |
+| Recipe (qayta ishlatish) & Embed | ✅ **Joriy etildi (F10):** "Use as Recipe" orqali istalgan muvaffaqiyatli videoning uslubi va ovoz sozlamalarini klonlash (`/new?from=<id>`), `GET /api/jobs/[id]` va Apple-minimalist 4-tabli Share & Embed (HTTP 206 Direct stream, responsive `<video>`, iframe, marketing script & scene breakdown) to'liq ulandi. |
 | Living video | Alohida mahsulot yo'nalishi |
 
 ---

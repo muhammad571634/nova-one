@@ -97,12 +97,21 @@
    - **Storyboard & Persistence (`src/lib/storyboard-parser.ts`):** `format` maydoni to'liq o'qiladi va qayta saqlashda yo'qolib ketmaydi.
    - **Simple Visual Editor & Live Tracker UI:** 9:16 tanlanganda sahna tahrirlash oynasi haqiqiy iPhone Dynamic Island va mobil ramkasiga aylanadi, subtitr va matnlar avtomatik vertikal markazga tushadi.
 
-8. **To'liq Tekshiruv:**
+8. **Phase F10 — "Use as Recipe" (Uslubni nusxalash) & Share / Embed Modal:**
+   - **Job Details API (`GET /api/jobs/[id]`):** Autentifikatsiyalangan foydalanuvchining loyiha va `briefConfig` sozlamalarini xavfsiz qaytaruvchi endpoint yaratildi.
+   - **New Video Wizard Recipe Pre-population (`src/app/(app)/new/page.tsx`):**
+     - `?from=<jobId>` parametri orqali oldingi loyihaning barcha parametrlari (preset, aspect, voice, length, captions) avtomatik to'ldiriladi.
+     - Apple-minimalist `Recipe Active: [slug]` ogohlantirish paneli kiritildi.
+     - Next.js Turbopack buildiga to'liq mos kelishi uchun `<Suspense>` o'rami qo'shildi.
+   - **Share & Embed Modal (`src/components/ProjectLiveTracker.tsx`):**
+     - 4 ta to'liq tab: Direct Stream URL (HTTP 206 Range), Responsive HTML5 `<video>` tegi, Iframe Player va marketing/ijtimoiy tarmoqlar uchun to'liq ovoz matni (transcript) hamda kadrma-kadr ssenariy ko'chirish imkoniyati.
+     - 1-klikli nusxalash va vizual `CheckCheck` tasdig'i.
+   - **Action Bar integratsiyasi:** Top Header va Video Player Toolbar ichiga `Use as Recipe` (`<Sparkles />`) va `Share & Embed` (`<Share2 />`) tugmalari to'liq ulandi.
+
+9. **To'liq Tekshiruv:**
    - `pnpm run typecheck` ➔ 0 xato (qat'iy TypeScript).
-   - `pnpm run build` ➔ 0 xato, Next.js 16 (Turbopack) ishlab chiqarish buildi toza yakunlandi.
-   - 9:16 va 1:1 brief generatori to'liq test qilindi.
-   - `GET /api/jobs/job_spike_cap/scenes` orqali barcha 7 ta kadr to'liq va xatosiz o'qilishi tekshirildi.
-   - `STORYBOARD.md` to'liq 7 ta kadri bilan saqlab qo'yildi.
+   - `pnpm run build` ➔ 0 xato, barcha 23 ta marshrut Turbopack orqali muvaffaqiyatli yig'ildi.
+   - `GET /api/jobs/job_spike_cap` va `GET /new?from=job_spike_cap` ➔ HTTP 200 OK.
    - Mock upgrade API va history API to'liq test qilindi (balans 1 dan 31 ga oshdi).
    - 0-kreditli test foydalanuvchisi bilan render qilganda HTTP 402 guard to'g'ri ishlashi isbotlandi.
 
