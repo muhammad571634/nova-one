@@ -47,7 +47,7 @@ async function processNextJob() {
 
   // Poll for any queued actionable state
   const job = db.prepare(
-    "SELECT * FROM jobs WHERE status IN ('queued', 'queued_revising', 'queued_building', 'queued_rendering') ORDER BY created_at ASC LIMIT 1"
+    "SELECT * FROM jobs WHERE status IN ('queued', 'queued_revising', 'queued_building', 'queued_editing', 'queued_rendering') ORDER BY created_at ASC LIMIT 1"
   ).get() as JobRow | undefined;
 
   if (!job) return;
@@ -77,6 +77,18 @@ async function processNextJob() {
       nextStatus = 'building';
       kind = 'build';
       claudePrompt = `Use the product-launch-video skill. The project already exists at videos/${job.slug}.\nBUILD:\nThe plan is approved. Skip the sketch pass and build in one go.\nRun Step 3.1 through the Step 6 checks and stop at the final-look question.`;
+    } else if (job.status === 'queued_editing') {
+      nextStatus = 'editing';
+      kind = 'edit';
+      let instruction = 'Refine and improve the video composition.';
+      try {
+        const editReqPath = path.join(job.project_dir, '.hyperframes', 'edit-request.json');
+        if (fs.existsSync(editReqPath)) {
+          const parsed = JSON.parse(fs.readFileSync(editReqPath, 'utf8'));
+          if (parsed.instruction) instruction = parsed.instruction;
+        }
+      } catch {}
+      claudePrompt = `Use the product-launch-video skill. The project already exists at videos/${job.slug}.\nEDIT:\nEdit request from the user: "${instruction}". Make only this edit in videos/${job.slug}, rerun lint and check, and stop.`;
     } else if (job.status === 'queued_rendering') {
       nextStatus = 'rendering';
       kind = 'render';
@@ -141,6 +153,18 @@ async function processNextJob() {
       console.log(`[Job ${job.id}] Spawning hyperframes render...`);
       const runStartTime = new Date().toISOString();
       try {
+        const rendersDir = path.join(job.project_dir, 'renders');
+        const currentMp4 = path.join(rendersDir, 'video.mp4');
+        if (fs.existsSync(currentMp4)) {
+          const archiveName = `video_v${Date.now()}.mp4`;
+          try {
+            fs.copyFileSync(currentMp4, path.join(rendersDir, archiveName));
+            console.log(`[Job ${job.id}] 📼 Preserved previous render as ${archiveName}`);
+          } catch (archErr: any) {
+            console.warn(`[Job ${job.id}] Notice archiving previous video: ${archErr.message}`);
+          }
+        }
+
         execSync('npx hyperframes@0.8.46 render --skill=product-launch-video --quality high --output renders/video.mp4', {
           cwd: job.project_dir,
           stdio: 'inherit'
@@ -290,13 +314,24 @@ async function processNextJob() {
       } else {
         throw new Error('Agent finished without creating STORYBOARD.md');
       }
-    } else if (kind === 'build') {
+    } else if (kind === 'build' || kind === 'edit') {
       const contactSheetPath = path.join(job.project_dir, 'snapshots', 'contact-sheet.jpg');
-      if (fs.existsSync(contactSheetPath) || finalMs.hasContactSheet) {
+      const indexPath = path.join(job.project_dir, 'index.html');
+      if (fs.existsSync(contactSheetPath) || finalMs.hasContactSheet || fs.existsSync(indexPath)) {
         db.prepare(`UPDATE jobs SET status = 'awaiting_render', claude_session_id = ?, updated_at = ? WHERE id = ?`)
           .run(result.claudeSessionId ?? null, new Date().toISOString(), job.id);
+
+        if (kind === 'edit') {
+          db.prepare(`
+            INSERT INTO job_events (id, job_id, ts, type, payload_json)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(crypto.randomUUID(), job.id, new Date().toISOString(), 'status_change', JSON.stringify({
+            status: 'awaiting_render',
+            text: 'Edit completed by AI. Composition updated and ready to review and re-render.'
+          }));
+        }
       } else {
-        throw new Error('Agent finished without generating contact sheet.');
+        throw new Error('Agent finished without generating contact sheet or composition.');
       }
     }
 

@@ -86,6 +86,7 @@ export default async function ProjectDetailPage(props: {
       hasContactSheet={hasContactSheet}
       renderRecord={renderRecord || null}
       agentRuns={agentRuns || []}
+      userBalance={user?.balance ?? 0}
     />
   );
 }

@@ -59,9 +59,52 @@ export async function POST(
     }
 
     if (action === "render") {
+      if (session.balance < 1) {
+        return NextResponse.json(
+          {
+            error: "Insufficient video credits. Please upgrade your plan in Billing to render videos.",
+            code: "INSUFFICIENT_CREDITS",
+          },
+          { status: 402 }
+        );
+      }
+
       // Update status to queued_rendering
       db.prepare("UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?").run("queued_rendering", now, id);
       return NextResponse.json({ success: true, status: "queued_rendering" });
+    }
+
+    if (action === "edit") {
+      const instruction = typeof payload?.instruction === "string" ? payload.instruction.trim() : "";
+      if (!instruction) {
+        return NextResponse.json({ error: "Instruction required for edit action" }, { status: 400 });
+      }
+
+      // Write edit instruction to .hyperframes/edit-request.json in project_dir
+      const hfDir = path.join(job.project_dir, ".hyperframes");
+      if (!fs.existsSync(hfDir)) {
+        fs.mkdirSync(hfDir, { recursive: true });
+      }
+
+      const editReqPath = path.join(hfDir, "edit-request.json");
+      fs.writeFileSync(editReqPath, JSON.stringify({ instruction, ts: now }, null, 2), "utf8");
+
+      // Update status to queued_editing
+      db.prepare("UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?").run("queued_editing", now, id);
+
+      const eventId = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO job_events (id, job_id, ts, type, payload_json)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        eventId,
+        id,
+        now,
+        "status_change",
+        JSON.stringify({ status: "queued_editing", text: `Edit requested: "${instruction}"` })
+      );
+
+      return NextResponse.json({ success: true, status: "queued_editing" });
     }
 
     if (action === "cancel") {

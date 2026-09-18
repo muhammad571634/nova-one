@@ -168,10 +168,33 @@ export default async function ProjectsPage() {
               </div>
 
               <div className="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1 font-medium">
-                  <Layers className="w-3.5 h-3.5 text-slate-400" />
-                  <span>16:9 Landscape</span>
-                </span>
+                {(() => {
+                  let aspectLabel = '16:9 Landscape';
+                  let presetLabel = '';
+                  try {
+                    if (job.brief_json) {
+                      const parsed = JSON.parse(job.brief_json);
+                      if (parsed.aspect === '9:16' || parsed.aspect === '1080x1920') aspectLabel = '9:16 Portrait';
+                      else if (parsed.aspect === '1:1' || parsed.aspect === '1080x1080') aspectLabel = '1:1 Square';
+                      if (parsed.stylePreset && parsed.stylePreset !== 'auto') {
+                        presetLabel = parsed.stylePreset;
+                      }
+                    }
+                  } catch {}
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 font-medium text-slate-600">
+                        <Layers className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{aspectLabel}</span>
+                      </span>
+                      {presetLabel && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                          {presetLabel}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <span className="flex items-center gap-0.5 text-[#0096C7] font-semibold group-hover:translate-x-0.5 transition-transform">
                   <span>Open</span>
                   <ArrowRight className="w-3.5 h-3.5" />

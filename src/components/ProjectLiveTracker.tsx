@@ -35,9 +35,13 @@ import {
   Share2,
   Copy,
   CheckCheck,
-  Zap
+  Zap,
+  Lock,
+  CreditCard,
+  Shield
 } from 'lucide-react';
 import { ParsedStoryboard } from '@/lib/storyboard-parser';
+import SimpleVisualEditor from './SimpleVisualEditor';
 
 // Direction C Canonical Template Showcases (Exact specs from c-canvas.html)
 const TEMPLATE_PRESETS = [
@@ -280,6 +284,7 @@ interface ProjectLiveTrackerProps {
   hasContactSheet?: boolean;
   renderRecord?: any;
   agentRuns?: any[];
+  userBalance?: number;
 }
 
 export default function ProjectLiveTracker({
@@ -295,8 +300,14 @@ export default function ProjectLiveTracker({
   hasContactSheet = false,
   renderRecord = null,
   agentRuns = [],
+  userBalance = 5,
 }: ProjectLiveTrackerProps) {
   const [status, setStatus] = useState(initialStatus);
+  const [balance, setBalance] = useState<number>(userBalance);
+  const [isMockUpgradeModalOpen, setIsMockUpgradeModalOpen] = useState(false);
+  const [isUpgradingInModal, setIsUpgradingInModal] = useState(false);
+  const [modalUpgradeError, setModalUpgradeError] = useState<string | null>(null);
+  const [modalUpgradeSuccess, setModalUpgradeSuccess] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<MilestoneState>({
@@ -315,8 +326,8 @@ export default function ProjectLiveTracker({
   const [isBriefOpen, setIsBriefOpen] = useState(false);
   const [storyboard, setStoryboard] = useState<ParsedStoryboard | null>(initialStoryboard || null);
 
-  // Direction C View Mode: 'templates' | 'scenes'
-  const [currentMode, setCurrentMode] = useState<'templates' | 'scenes'>('scenes');
+  // Direction C View Mode: 'templates' | 'scenes' | 'editor'
+  const [currentMode, setCurrentMode] = useState<'templates' | 'scenes' | 'editor'>('scenes');
 
   // Direction C Comments State: cardId -> comment text
   const [comments, setComments] = useState<Record<string, string>>({});
@@ -340,7 +351,7 @@ export default function ProjectLiveTracker({
   const [editVoice, setEditVoice] = useState(briefConfig?.voice || 'female');
   const [editIntent, setEditIntent] = useState(briefConfig?.intent || 'promote');
   const [editAspect, setEditAspect] = useState<'16:9' | '9:16' | '1:1'>(() => {
-    const raw = briefConfig?.aspect;
+    const raw = briefConfig?.aspect || initialStoryboard?.format;
     if (raw === '9:16' || raw === '1080x1920') return '9:16';
     if (raw === '1:1' || raw === '1080x1080') return '1:1';
     return '16:9';
@@ -348,6 +359,67 @@ export default function ProjectLiveTracker({
   const [editCaptions, setEditCaptions] = useState<boolean>(briefConfig?.captions !== false);
   const [editBrandColor, setEditBrandColor] = useState<string>(briefConfig?.brandColor || '#2B59FF');
   const [editBrandName, setEditBrandName] = useState<string>(briefConfig?.brandName || '');
+
+  // Synchronize editAspect if storyboard arrives with format frontmatter
+  useEffect(() => {
+    if (storyboard?.format) {
+      const f = storyboard.format;
+      if (f === '9:16' || f === '1080x1920') setEditAspect('9:16');
+      else if (f === '1:1' || f === '1080x1080') setEditAspect('1:1');
+      else if (f === '16:9' || f === '1920x1080') setEditAspect('16:9');
+    }
+  }, [storyboard?.format]);
+
+  // F7: Studio & Edit States
+  const [isStudioLoading, setIsStudioLoading] = useState(false);
+  const [studioInfo, setStudioInfo] = useState<{ isRunning: boolean; url?: string; port?: number } | null>(null);
+  const [editChangeText, setEditChangeText] = useState('');
+
+  // Check Studio status on load
+  useEffect(() => {
+    let isMounted = true;
+    const checkStudio = async () => {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/studio`);
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          setStudioInfo(data);
+        }
+      } catch {}
+    };
+    checkStudio();
+    return () => {
+      isMounted = false;
+    };
+  }, [jobId]);
+
+  const handleOpenStudio = async () => {
+    setIsStudioLoading(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/studio`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioInfo(data);
+        if (data.url) {
+          window.open(data.url, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to start HyperFrames Studio');
+      }
+    } catch {
+      alert('Network error starting HyperFrames Studio');
+    } finally {
+      setIsStudioLoading(false);
+    }
+  };
+
+  const handleStopStudio = async () => {
+    try {
+      await fetch(`/api/jobs/${jobId}/studio`, { method: 'DELETE' });
+      setStudioInfo({ isRunning: false });
+    } catch {}
+  };
 
   // Dropdown / Popover states for option chips
   const [isLengthMenuOpen, setIsLengthMenuOpen] = useState(false);
@@ -458,10 +530,41 @@ export default function ProjectLiveTracker({
     });
   };
 
+  const handleModalUpgrade = async (plan: 'pro' | 'team' = 'pro') => {
+    setIsUpgradingInModal(true);
+    setModalUpgradeError(null);
+    try {
+      const res = await fetch('/api/billing/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upgrade plan');
+      }
+      setBalance(data.balance);
+      setModalUpgradeSuccess(`Upgraded to ${data.plan === 'team' ? 'Team' : 'Pro'}! Active balance: ${data.balance} credits.`);
+      setTimeout(() => {
+        setIsMockUpgradeModalOpen(false);
+        setModalUpgradeSuccess(null);
+      }, 1200);
+    } catch (err: unknown) {
+      setModalUpgradeError(err instanceof Error ? err.message : 'Upgrade failed');
+    } finally {
+      setIsUpgradingInModal(false);
+    }
+  };
+
   const handleAction = async (
-    action: 'revise' | 'build' | 'render' | 'cancel' | 'restart' | 'edit_brief',
+    action: 'revise' | 'build' | 'render' | 'cancel' | 'restart' | 'edit_brief' | 'edit',
     customPayload?: any
   ) => {
+    if (action === 'render' && balance < 1) {
+      setIsMockUpgradeModalOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let payload = customPayload;
@@ -472,6 +575,10 @@ export default function ProjectLiveTracker({
               ...comments, 
               ...(globalFeedback.trim() ? { global: globalFeedback.trim() } : {}) 
             } 
+          };
+        } else if (action === 'edit') {
+          payload = {
+            instruction: (editChangeText || globalFeedback).trim()
           };
         } else if (action === 'edit_brief') {
           payload = {
@@ -496,11 +603,24 @@ export default function ProjectLiveTracker({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, payload }),
       });
+
+      if (res.status === 402) {
+        setBalance(0);
+        setIsMockUpgradeModalOpen(true);
+        const err = await res.json();
+        alert(err.error || 'Insufficient video credits. Please upgrade your plan.');
+        return;
+      }
+
       if (res.ok) {
-        if (action === 'revise') {
+        if (action === 'render') {
+          setBalance((b) => Math.max(0, b - 1));
+        }
+        if (action === 'revise' || action === 'edit') {
           setComments({});
           setDraftComments({});
           setGlobalFeedback('');
+          setEditChangeText('');
           setOpenCardId(null);
         }
         if (action === 'edit_brief') {
@@ -581,10 +701,14 @@ export default function ProjectLiveTracker({
       document.title = `(● ${milestones.percentage}%) Planning ${brandName} · Nova One`;
     } else if (status === 'building' || status === 'queued_building') {
       document.title = `(● ${milestones.percentage}%) Assembling ${brandName} · Nova One`;
+    } else if (status === 'editing' || status === 'queued_editing') {
+      document.title = `(●) Editing ${brandName} · Nova One`;
     } else if (status === 'rendering' || status === 'queued_rendering') {
       document.title = `(●) Rendering MP4 · Nova One`;
     } else if (status === 'awaiting_approval') {
       document.title = `(✓) Storyboard Ready! · Nova One`;
+    } else if (status === 'awaiting_render') {
+      document.title = `(✓) Ready to Render · Nova One`;
     } else if (status === 'done') {
       document.title = `(✓) Video Ready! · Nova One`;
     } else if (status === 'cancelled') {
@@ -672,8 +796,16 @@ export default function ProjectLiveTracker({
                 ? 'Agent generating storyboard…'
                 : status === 'cancelled'
                 ? 'Generation stopped'
-                : status === 'building'
+                : status === 'building' || status === 'queued_building'
                 ? 'Assembling video…'
+                : status === 'revising' || status === 'queued_revising'
+                ? 'Applying your comments…'
+                : status === 'editing' || status === 'queued_editing'
+                ? 'Applying video edit…'
+                : status === 'awaiting_render'
+                ? 'Ready to render'
+                : status === 'rendering' || status === 'queued_rendering'
+                ? 'Rendering 1080p MP4…'
                 : status === 'done'
                 ? 'Video ready'
                 : status === 'failed'
@@ -685,7 +817,7 @@ export default function ProjectLiveTracker({
 
         {/* Action Buttons Top Right */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {['queued', 'preparing', 'planning', 'building', 'revising', 'rendering'].includes(status) && (
+          {['queued', 'preparing', 'planning', 'building', 'revising', 'editing', 'rendering'].includes(status) && (
             <button
               type="button"
               onClick={() => handleAction('cancel')}
@@ -694,6 +826,46 @@ export default function ProjectLiveTracker({
             >
               <Square className="w-3.5 h-3.5 fill-rose-600 text-rose-600" />
               <span>{isSubmitting ? 'Stopping…' : 'Stop Agent'}</span>
+            </button>
+          )}
+
+          {/* F7: HyperFrames Studio Button */}
+          {studioInfo?.isRunning ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <a
+                href={studioInfo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:underline inline-flex items-center gap-1"
+                title="Open Studio in new tab"
+              >
+                <span>Studio :{studioInfo.port}</span>
+                <ExternalLink className="w-3 h-3 text-emerald-600" />
+              </a>
+              <button
+                type="button"
+                onClick={handleStopStudio}
+                className="w-4 h-4 rounded-full hover:bg-emerald-200/80 text-emerald-800 flex items-center justify-center transition-colors ml-0.5 cursor-pointer"
+                title="Stop Studio Preview Server"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleOpenStudio}
+              disabled={isStudioLoading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 transition-all shadow-2xs cursor-pointer disabled:opacity-60"
+              title="Open HyperFrames Studio Visual Timeline Editor"
+            >
+              {isStudioLoading ? (
+                <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+              ) : (
+                <Sliders className="w-3.5 h-3.5 text-slate-500" />
+              )}
+              <span>{isStudioLoading ? 'Starting…' : 'Open in Studio'}</span>
             </button>
           )}
 
@@ -942,6 +1114,14 @@ export default function ProjectLiveTracker({
             >
               {brandName} Scenes
             </button>
+            <button
+              type="button"
+              onClick={() => setCurrentMode('editor')}
+              className={`inline-flex items-center gap-1.5 ${currentMode === 'editor' ? 'active' : ''}`}
+            >
+              <Sparkles className="w-3 h-3 text-[#00C2FF]" />
+              <span>Visual Editor</span>
+            </button>
           </div>
 
           <span className="text-xs font-semibold text-slate-500 tabular-nums">
@@ -950,8 +1130,27 @@ export default function ProjectLiveTracker({
         </div>
       </div>
 
-      {/* 3-Column Card Grid matching Image 2 */}
-      <div className="canvas-grid">
+      {/* Visual Editor View (Phase F9) or 3-Column Card Grid */}
+      {currentMode === 'editor' ? (
+        <SimpleVisualEditor
+          jobId={jobId}
+          slug={slug}
+          brandName={brandName}
+          initialScenes={cardItems}
+          aspect={editAspect}
+          brandColor={editBrandColor}
+          status={status}
+          balance={balance}
+          onOpenStudio={handleOpenStudio}
+          isStudioLoading={isStudioLoading}
+          studioInfo={studioInfo}
+          onRender={() => handleAction('render')}
+          isSubmitting={isSubmitting}
+          onCloseEditor={() => setCurrentMode('scenes')}
+          onDescribeChange={(instruction) => handleAction('edit', { instruction })}
+        />
+      ) : (
+        <div className="canvas-grid">
         {cardItems.map((item) => {
           const isTemplate = currentMode === 'templates';
           const displayTitle = isTemplate ? item.templateTitle : item.sceneTitle;
@@ -1148,6 +1347,7 @@ export default function ProjectLiveTracker({
           );
         })}
       </div>
+      )}
 
       {/* RENDER / REVIEW / READY SECTION (Phase F6 Complete Implementation) */}
       {['awaiting_render', 'queued_rendering', 'rendering', 'done'].includes(status) && (
@@ -1184,16 +1384,79 @@ export default function ProjectLiveTracker({
                 </div>
               )}
 
+              {/* F8: Zero Credit Guard & Upgrade Banner */}
+              {balance < 1 && (
+                <div className="w-full max-w-2xl p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/80 border border-amber-200/90 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-2xs animate-in fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-display font-extrabold text-xs sm:text-sm text-amber-950">
+                        No Video Credits Remaining (0 left)
+                      </h4>
+                      <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                        Your free render quota is exhausted. Upgrade your plan to unlock 1080p MP4 rendering and cloud exports.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMockUpgradeModalOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-display font-bold text-xs transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-95"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+                    <span>Upgrade to Render</span>
+                  </button>
+                </div>
+              )}
+
               {/* Render CTA Bar */}
               <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-center">
                 <button
                   type="button"
-                  onClick={() => handleAction('render')}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-bold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                  onClick={() => {
+                    if (balance < 1) {
+                      setIsMockUpgradeModalOpen(true);
+                      return;
+                    }
+                    handleAction('render');
+                  }}
+                  disabled={isSubmitting || balance < 1}
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-display font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2.5 ${
+                    balance < 1
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300/60 shadow-none'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white hover:shadow-lg cursor-pointer disabled:opacity-50'
+                  }`}
+                  title={balance < 1 ? 'Zero credits remaining — upgrade to render' : undefined}
                 >
-                  <Play className="w-4 h-4 fill-white text-white" />
-                  <span>{isSubmitting ? 'Queueing Render…' : 'Render Video (1080p MP4)'}</span>
+                  {balance < 1 ? (
+                    <Lock className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-white text-white" />
+                  )}
+                  <span>
+                    {isSubmitting
+                      ? 'Queueing Render…'
+                      : balance < 1
+                      ? '0 Credits (Upgrade to Render)'
+                      : 'Render Video (1080p MP4)'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenStudio}
+                  disabled={isStudioLoading}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  title="Open timeline in HyperFrames Studio"
+                >
+                  {isStudioLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  ) : (
+                    <Sliders className="w-3.5 h-3.5 text-slate-500" />
+                  )}
+                  <span>{isStudioLoading ? 'Opening Studio…' : 'Open in Studio'}</span>
                 </button>
 
                 <button
@@ -1212,6 +1475,67 @@ export default function ProjectLiveTracker({
                 <span>Quality: 1080p High</span>
                 <span>•</span>
                 <span>Est. Time: ~30s</span>
+              </div>
+
+              {/* F7: Describe a change box in Review */}
+              <div className="w-full max-w-2xl text-left bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-5 mt-4 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#2B59FF]" />
+                    <span className="font-display font-extrabold text-sm text-slate-900">
+                      Describe a Change to the Video
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    AI updates composition &amp; checks before render
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-300/80 p-1.5 focus-within:border-[#2B59FF] focus-within:ring-2 focus-within:ring-[#2B59FF]/10 transition-all">
+                  <input
+                    type="text"
+                    value={editChangeText}
+                    onChange={(e) => setEditChangeText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && editChangeText.trim()) {
+                        handleAction('edit', { instruction: editChangeText.trim() });
+                      }
+                    }}
+                    placeholder="e.g. “Make headline punchier, speed up scene 1, use bolder colors”"
+                    className="flex-1 px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-transparent border-none outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editChangeText.trim()) {
+                        handleAction('edit', { instruction: editChangeText.trim() });
+                      }
+                    }}
+                    disabled={!editChangeText.trim() || isSubmitting}
+                    className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                    <span>Apply Edit</span>
+                  </button>
+                </div>
+                {/* Quick edit inspiration pills */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-semibold text-slate-400">Suggestions:</span>
+                  {[
+                    'Make the first headline punchier',
+                    'Speed up the intro transition',
+                    'Use high-contrast dark accents',
+                    'Shorten voiceover pacing'
+                  ].map((sug, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setEditChangeText(sug)}
+                      className="px-2.5 py-0.5 rounded-md bg-white hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[11px] font-medium text-slate-600 hover:text-blue-700 transition-all cursor-pointer"
+                    >
+                      {sug}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -1311,12 +1635,37 @@ export default function ProjectLiveTracker({
 
                   <button
                     type="button"
-                    onClick={() => handleAction('render')}
+                    onClick={handleOpenStudio}
+                    disabled={isStudioLoading}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
+                    title="Open timeline in HyperFrames Studio"
+                  >
+                    {isStudioLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    ) : (
+                      <Sliders className="w-3.5 h-3.5 text-slate-500" />
+                    )}
+                    <span>{isStudioLoading ? 'Opening…' : 'Open in Studio'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (balance < 1) {
+                        setIsMockUpgradeModalOpen(true);
+                        return;
+                      }
+                      handleAction('render');
+                    }}
                     disabled={isSubmitting}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer disabled:opacity-50"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Re-render</span>
+                    {balance < 1 ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                    ) : (
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                    )}
+                    <span>{balance < 1 ? '0 Credits' : 'Re-render'}</span>
                   </button>
                 </div>
               </div>
@@ -1375,6 +1724,67 @@ export default function ProjectLiveTracker({
                   <div className="font-display font-extrabold text-base text-slate-900 mt-0.5 font-mono">
                     ${totalCostUsd.toFixed(3)}
                   </div>
+                </div>
+              </div>
+
+              {/* F7: Describe a change & re-render in Done state */}
+              <div className="w-full text-left bg-slate-50/90 border border-slate-200/90 rounded-2xl p-4 sm:p-5 mt-4 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#2B59FF]" />
+                    <span className="font-display font-extrabold text-sm text-slate-900">
+                      Want to Change Something in this Video?
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    AI updates code &amp; prepares fresh review
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-white rounded-xl border border-slate-300/80 p-1.5 focus-within:border-[#2B59FF] focus-within:ring-2 focus-within:ring-[#2B59FF]/10 transition-all">
+                  <input
+                    type="text"
+                    value={editChangeText}
+                    onChange={(e) => setEditChangeText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && editChangeText.trim()) {
+                        handleAction('edit', { instruction: editChangeText.trim() });
+                      }
+                    }}
+                    placeholder="e.g. “Make call-to-action button punchier, shorten scene 2, swap colors”"
+                    className="flex-1 px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 bg-transparent border-none outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editChangeText.trim()) {
+                        handleAction('edit', { instruction: editChangeText.trim() });
+                      }
+                    }}
+                    disabled={!editChangeText.trim() || isSubmitting}
+                    className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                    <span>Apply Edit</span>
+                  </button>
+                </div>
+                {/* Quick edit inspiration pills */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-semibold text-slate-400">Suggestions:</span>
+                  {[
+                    'Make the CTA button bigger and brighter',
+                    'Speed up pacing by 15%',
+                    'Change accent gradient to purple',
+                    'Tone down animations in scene 3'
+                  ].map((sug, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setEditChangeText(sug)}
+                      className="px-2.5 py-0.5 rounded-md bg-white hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[11px] font-medium text-slate-600 hover:text-blue-700 transition-all cursor-pointer"
+                    >
+                      {sug}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1472,23 +1882,37 @@ export default function ProjectLiveTracker({
           onChange={(e) => setGlobalFeedback(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && globalFeedback.trim()) {
-              handleAction('revise');
+              if (['awaiting_render', 'done'].includes(status)) {
+                handleAction('edit', { instruction: globalFeedback.trim() });
+                setGlobalFeedback('');
+              } else {
+                handleAction('revise');
+              }
             }
           }}
-          placeholder="Describe a change to the whole plan — e.g. “make it more playful”"
+          placeholder={
+            ['awaiting_render', 'done'].includes(status)
+              ? 'Describe a change to the video — e.g. “make headline punchier”'
+              : 'Describe a change to the whole plan — e.g. “make it more playful”'
+          }
           className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 font-sans min-w-0"
         />
         <button
           type="button"
           onClick={() => {
             if (globalFeedback.trim()) {
-              handleAction('revise');
+              if (['awaiting_render', 'done'].includes(status)) {
+                handleAction('edit', { instruction: globalFeedback.trim() });
+                setGlobalFeedback('');
+              } else {
+                handleAction('revise');
+              }
             }
           }}
           disabled={!globalFeedback.trim() || isSubmitting}
           className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2B59FF] to-[#1A46E8] hover:from-[#1A46E8] hover:to-[#0F35C8] transition-all shadow-sm cursor-pointer disabled:opacity-50"
         >
-          Send
+          {isSubmitting ? 'Sending…' : 'Send'}
         </button>
       </div>
 
@@ -2090,6 +2514,167 @@ export default function ProjectLiveTracker({
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* F8: In-Place Mock Upgrade Modal (Apple Minimalist) */}
+      {isMockUpgradeModalOpen && (
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isUpgradingInModal) {
+              setIsMockUpgradeModalOpen(false);
+              setModalUpgradeError(null);
+            }
+          }}
+        >
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-display font-extrabold text-base text-slate-900">
+                    Upgrade to Render
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Active Balance: {balance} credits remaining
+                  </p>
+                </div>
+              </div>
+              {!isUpgradingInModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMockUpgradeModalOpen(false);
+                    setModalUpgradeError(null);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {modalUpgradeSuccess ? (
+                <div className="py-6 text-center space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+                    <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
+                  </div>
+                  <h4 className="font-display font-extrabold text-base text-slate-900">
+                    Credits Added Successfully!
+                  </h4>
+                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
+                    {modalUpgradeSuccess}
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMockUpgradeModalOpen(false);
+                        setModalUpgradeSuccess(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-all cursor-pointer"
+                    >
+                      Ready to Render
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Choose a plan to instantly add credits and compile your production 1080p launch video.
+                  </p>
+
+                  {/* Plan Options */}
+                  <div className="space-y-2.5">
+                    <div
+                      onClick={() => !isUpgradingInModal && handleModalUpgrade('pro')}
+                      className="p-4 rounded-2xl border-2 border-[#00B4D8] bg-cyan-50/20 hover:bg-cyan-50/40 cursor-pointer transition-all flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold text-sm text-slate-900">
+                            Pro Creator (Mock)
+                          </span>
+                          <span className="text-[10px] font-extrabold text-[#0096C7] uppercase bg-cyan-100/80 px-2 py-0.5 rounded-full">
+                            +30 Credits
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          High quality 1080p, priority worker queue, Studio access
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-display font-extrabold text-sm text-slate-900">
+                          $29<span className="text-[10px] font-normal text-slate-500">/mo</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-blue-600 group-hover:underline">
+                          Select &rsaquo;
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => !isUpgradingInModal && handleModalUpgrade('team')}
+                      className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold text-sm text-slate-900">
+                            Team &amp; Agency (Mock)
+                          </span>
+                          <span className="text-[10px] font-extrabold text-slate-600 uppercase bg-slate-100 px-2 py-0.5 rounded-full">
+                            +100 Credits
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          High-volume render pipeline, cloud rendering
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-display font-extrabold text-sm text-slate-900">
+                          $89<span className="text-[10px] font-normal text-slate-500">/mo</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-600 group-hover:underline">
+                          Select &rsaquo;
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {modalUpgradeError && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+                      {modalUpgradeError}
+                    </div>
+                  )}
+
+                  {isUpgradingInModal && (
+                    <div className="py-2 flex items-center justify-center gap-2 text-xs text-blue-600 font-bold">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Simulating mock payment &amp; adding credits…</span>
+                    </div>
+                  )}
+
+                  <div className="pt-1 flex items-center justify-between text-xs text-slate-500">
+                    <span className="text-[10px] text-slate-400">Sandbox mode — no charge</span>
+                    <Link
+                      href="/billing"
+                      target="_blank"
+                      className="text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1"
+                    >
+                      <span>View Full Billing &amp; Plans</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

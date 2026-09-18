@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -45,6 +45,18 @@ export default function NewVideoWizardPage() {
   const [showBriefPreview, setShowBriefPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user && typeof data.user.balance === 'number') {
+          setBalance(data.user.balance);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Quick suggestions
   const sampleUrls = [
@@ -145,6 +157,32 @@ export default function NewVideoWizardPage() {
             Step {step} of 3 — {step === 1 ? 'Target Website' : step === 2 ? 'Visual Aesthetic' : 'Video Settings & Voice'}
           </p>
         </div>
+
+        {/* F8: Zero Balance Warning Banner */}
+        {balance !== null && balance < 1 && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/70 border border-amber-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-display font-bold text-xs sm:text-sm text-amber-950">
+                  0 Video Credits Remaining
+                </h4>
+                <p className="text-[11px] text-amber-800 mt-0.5">
+                  Your free video generation quota is exhausted. Upgrade your plan to start new videos.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/billing"
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1.5 shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <span>Upgrade Plan</span>
+            </Link>
+          </div>
+        )}
 
         {/* Capsule Progress Bar */}
         <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">

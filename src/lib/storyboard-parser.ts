@@ -9,6 +9,7 @@ export interface StoryboardFrame {
 }
 
 export interface ParsedStoryboard {
+  format?: string;
   message?: string;
   duration?: string;
   arc?: string;
@@ -32,6 +33,7 @@ export function parseStoryboardMarkdown(content: string): ParsedStoryboard {
       if (!key) continue;
       const val = vals.join(':').trim().replace(/^["']|["']$/g, '');
       const trimmedKey = key.trim();
+      if (trimmedKey === 'format') result.format = val;
       if (trimmedKey === 'message') result.message = val;
       if (trimmedKey === 'duration') result.duration = val;
       if (trimmedKey === 'arc') result.arc = val;
@@ -81,4 +83,28 @@ export function parseStoryboardMarkdown(content: string): ParsedStoryboard {
   }
 
   return result;
+}
+
+export function serializeStoryboardMarkdown(
+  storyboard: ParsedStoryboard
+): string {
+  let output = '---\n';
+  if (storyboard.format) output += `format: ${storyboard.format}\n`;
+  if (storyboard.message) output += `message: "${storyboard.message}"\n`;
+  if (storyboard.duration) output += `duration: "${storyboard.duration}"\n`;
+  if (storyboard.arc) output += `arc: "${storyboard.arc}"\n`;
+  if (storyboard.stylePreset) output += `style_preset: "${storyboard.stylePreset}"\n`;
+  output += '---\n\n';
+
+  for (const fr of storyboard.frames) {
+    output += `## Frame ${fr.id} — ${fr.title}\n`;
+    if (fr.scene) output += `- scene: ${fr.scene}\n`;
+    if (fr.voiceover) output += `- voiceover: "${fr.voiceover}"\n`;
+    if (fr.duration) output += `- duration: ${fr.duration}\n`;
+    if (fr.type) output += `- type: ${fr.type}\n`;
+    if (fr.status) output += `- status: ${fr.status}\n`;
+    output += '\n';
+  }
+
+  return output.trimEnd() + '\n';
 }

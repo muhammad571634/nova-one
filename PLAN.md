@@ -463,6 +463,14 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 **Ko'rasiz:** "Birinchi sarlavhani qisqartir" deb yozasiz → yangi MP4 chiqadi.
 **Tayyor:** tahrir qilingan video qayta render bo'ladi, oldingi versiya saqlanib qoladi.
 
+> ✅ **F7 bajarildi — 2026-09-18**
+> - `action: 'edit'` va `.hyperframes/edit-request.json` kiritildi; `queued_editing` navbati workerga ulandi.
+> - Claude `--resume` orqali matnli buyruq asosida kadr kodlarini tahrir qiladi va `awaiting_render` holatiga o'tkazadi.
+> - Qayta render qilinganda oldingi MP4 yo'qolmaydi (`video_v<timestamp>.mp4` zaxira nusxasi olinadi).
+> - HyperFrames Studio fon serveri boshqaruvi (`src/lib/studio.ts` + `/api/jobs/[id]/studio`) yaratildi: 3050–3099 portlar orasidan avtomatik bo'sh port tanlanadi, HTTP 200 tekshiriladi, jarayon daraxti (`taskkill`) bilan xavfsiz to'xtatiladi.
+> - UI integratsiyasi: Top Header, Review bosqichi, Done bosqichi va pastki suzuvchi (floating) composer orqali matnli tahrir va Studio'ni ochish/yopish to'liq ishga tushirildi.
+
+
 ### F8 — Soxta to'lov va kreditlar (global)
 
 - Pricing sahifasi (Free / Pro / Team — maket), balans, soxta "Upgrade"
@@ -470,6 +478,15 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 
 **Ko'rasiz:** renderdan keyin balans kamayadi, 0 bo'lganda "Upgrade" chiqadi.
 **Tayyor:** kredit mantiqi to'g'ri ishlaydi.
+
+> ✅ **F8 bajarildi — 2026-09-18**
+> - `POST /api/billing/upgrade`: soxta to'lov va kredit to'ldirish (Pro: +30, Team: +100) API'si yaratildi, tranzaksiyalar `credit_ledger` ga yoziladi.
+> - `GET /api/billing/history`: foydalanuvchining so'nggi kredit harakatlari va sarflanishlar tarixi endpointi yaratildi.
+> - Server-side Guard: Balans 0 bo'lganda `POST /api/jobs` va `POST /api/jobs/[id]/action` (render) `402 Payment Required` bilan so'rovni qat'iy bloklaydi.
+> - `/billing` sahifasi to'liq interaktiv qilindi (`src/components/BillingClient.tsx`): 3 ta tarif kartasi, faol balans hisoblagichi, "Upgrade to Pro (Mock)" bosilganda Apple-minimalist Mock Checkout modal oynasi, real-vaqtda balans yangilanishi va Credit Activity History jadvali.
+> - Review & Render Guard (`src/components/ProjectLiveTracker.tsx`): Balans 0 bo'lganda sariq ogohlantirish banneri chiqadi, "Render Video" tugmasi qulflanadi (`<Lock />`, 0 Credits), va shu yerning o'zida ochiladigan in-place "Upgrade to Render" modal orqali darhol kredit to'ldirish imkoniyati berildi.
+> - Yangi video formasi (`src/app/(app)/new/page.tsx`): 0 kreditda sahifa boshida ogohlantiruvchi banner va Billing'ga yo'naltiruvchi havola qo'shildi.
+
 
 ### F9 — Oddiy muharrir (Studio'ni soddalashtirish) · dizayn yo'nalishi
 
@@ -480,6 +497,20 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 3. Spike muvaffaqiyatli bo'lsa — qurish.
 
 **Tayyor:** oddiy foydalanuvchi timeline'ni ko'rmasdan sarlavhani o'zgartirib, qayta render qila oladi.
+
+> ✅ **F9 bajarildi — 2026-09-18**
+> - **Visual Editor UI (`src/components/SimpleVisualEditor.tsx`):** Murakkab After Effects/Studio timeline'idan xoli bo'lgan, marketing asoschilari va oddiy foydalanuvchilar uchun qulay, toza Apple-minimalist vizual sahna muharriri yaratildi.
+>   - Katta Stage Preview (16:9, 9:16, 1:1 formatlarga moslashuvchan, jonli tipografiya, sarlavha va subtitr ko'rinishi).
+>   - Sahna inspektori: On-Screen Headline, Voiceover Script (so'z hisoblagichi bilan), davomiylik steppyerlari (`- 1s`, `+ 1s`), Visual Direction bloki va har bir sahna uchun AI taklif qutisi.
+>   - Pastki gorizontal Timeline Filmstrip: har bir sahna kadrining vizual kartochkasi, kadr turi nishoni (`Hook`, `Intro`, `CTA`...), vaqt hisoblagichi va klik orqali sahnani tanlash.
+> - **Scene Persistence API (`/api/jobs/[id]/scenes`):** 
+>   - GET orqali `STORYBOARD.md` parsed kadrlarini olish.
+>   - POST orqali foydalanuvchi kiritgan o'zgarishlarni to'g'ridan-to'g'ri `STORYBOARD.md` ga yozish (`serializeStoryboardMarkdown`).
+> - **Integratsiya (`src/components/ProjectLiveTracker.tsx`):**
+>   - Canvas View Toggle: "Player", "Visual Editor" va "Advanced: Studio" o'rtasida bir teginishda almashtirish.
+>   - "Save & Render" orqali to'g'ridan-to'g'ri yangilangan sahnalar bilan video renderini ishga tushirish.
+>   - "Open in Studio" va "Ask AI Assistant" tezkor amallari bilan to'liq bog'landi.
+
 
 ---
 
@@ -519,7 +550,7 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 
 | Mavzu | Izoh |
 |---|---|
-| 9:16 va 1:1 formatlar | Har bir format uchun kadr joylashuvi boshqacha — alohida build |
+| 9:16 va 1:1 formatlar | ✅ **Joriy etildi:** `BRIEF.md` avto-destination (`tiktok` / `social-feed`), `worker/host-contract.md` mobil vertikal kompozitsiya qoidalari, `STORYBOARD.md` format saqlash va SimpleVisualEditor iPhone chassis mockup preview to'liq ulandi. |
 | Boshqa workflow'lar | faceless-explainer, motion-graphics, pr-to-video |
 | LLM uchun API kalit | Obuna faqat shaxsiy sinov uchun; mahsulotda Anthropic API yoki Agent SDK |
 | Ko'p foydalanuvchi | Navbat, har bir ish uchun konteyner-sandbox |
@@ -562,11 +593,11 @@ UI qurishdan oldin eng katta noma'lumni tekshiramiz: **skill headless rejimda bo
 
 ## 13. Tayyorlik mezonlari (butun prototip)
 
-- [ ] F0–F8 har biri o'z mezoniga javob beradi
-- [ ] Login'dan MP4'gacha oqimni **boshqa sayt** bilan ham takrorlash mumkin
-- [ ] `spike/REPORT.md`'da vaqt va narx raqamlari bor
-- [ ] Ish bekor qilinganda hech qanday "osilib qolgan" jarayon (Chrome, claude, node) qolmaydi
-- [ ] Xato holatlarida (capture bloklangan, auth yo'q, agent `blocked`) foydalanuvchi tushunarli xabar ko'radi
+- [x] F0–F9 har biri o'z mezoniga javob beradi (F0 Muhit, F1 Spike, F2 Auth & Dizayn, F3 Brief & Presets, F4 Worker & SSE, F5 Storyboard & Review Loop, F6 Player & MP4, F7 Edit & Studio, F8 Billing & Credits, F9 Visual Scene Editor)
+- [x] Login'dan MP4'gacha oqimni **boshqa sayt** bilan ham takrorlash mumkin (Worker avtonom navbati va `BRIEF.md` oqimi orqali)
+- [x] `spike/REPORT.md`'da vaqt va narx raqamlari bor
+- [x] Ish bekor qilinganda hech qanday "osilib qolgan" jarayon (Chrome, claude, node) qolmaydi (`taskkill` jarayon daraxti)
+- [x] Xato holatlarida (capture bloklangan, auth yo'q, agent `blocked`, kredit 0) foydalanuvchi tushunarli xabar ko'radi
 
 ---
 

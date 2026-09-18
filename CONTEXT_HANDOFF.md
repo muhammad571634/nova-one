@@ -49,11 +49,62 @@
    - HyperFrames `init` chaqiruvi tuzatildi: endi ortiqcha `my-video` ichki papkasi yaratilmaydi, to'g'ridan-to'g'ri loyiha ildiziga (`. --non-interactive --skill=product-launch-video`) yoziladi.
    - Render tugagach `renders` jadvaliga yozish, kredit balansidan yechish va `job_events` ga yakuniy status voqeasini yuborish ulandi.
 
-5. **To'liq Tekshiruv:**
-   - `pnpm run typecheck` ➔ 0 xato.
-   - `pnpm run build` ➔ 0 xato, Turbopack warninglarsiz toza build.
-   - HTTP 200 OK: `http://localhost:3000/projects/job_f239d56bcd40`.
-   - HTTP 200 OK + HTTP 206 Partial Content: `http://localhost:3000/projects/job_spike_cap` va `/api/jobs/job_spike_cap/files/renders/video.mp4`.
+4. **Phase F7 — Matnli Tahrirlash ("Describe a change") & HyperFrames Studio:**
+   - **Studio fon serveri menejeri (`src/lib/studio.ts`):** Dynamic port tekshiruvi (3050–3099 oraliq), `npx hyperframes preview . --port <port> --no-open` background jarayonini ishga tushirish, HTTP 200 liveness tekshiruvi va xavfsiz to'xtatish (`taskkill` process tree).
+   - **Studio API (`/api/jobs/[id]/studio`):** GET (status/port/url), POST (ishga tushirish va Studio URL qaytarish), DELETE (serverni to'xtatish) endpointlari.
+   - **Action API (`/api/jobs/[id]/action`):** `action: 'edit'` qo'llab-quvvatlandi, `.hyperframes/edit-request.json` fayliga buyruq yoziladi, status `queued_editing` ga o'tkaziladi.
+   - **Worker integratsiyasi (`worker/index.ts`):** `queued_editing` navbati ulandi, Claude prompti (`product-launch-video` skill bilan `videos/<slug>` dagi fayllarni tahrirlash) tuziladi, `--resume <claude_session_id>` orqali tahrir qilinadi, lint & check o'tkaziladi va loyiha `awaiting_render` holatiga qaytariladi.
+   - **Render zaxiralash (Versioning):** Har safar qayta render qilinganda oldingi `video.mp4` o'chib ketmasligi uchun avtomatik `video_v<timestamp>.mp4` zaxira nusxasi olinadi.
+   - **UI komponentlari (`src/components/ProjectLiveTracker.tsx`):**
+     - Top Header: `Open in Studio` tugmasi va faol Studio port indikatori (`Studio :3050`).
+     - Awaiting Render (Review) bo'limi: `Open in Studio` tugmasi hamda "Describe a Change to the Video" matn kiritish paneli va tezkor takliflar (pills).
+     - Done (Video Ready) bo'limi: Action toolbar ichida `Open in Studio` tugmasi va video ostida "Want to Change Something in this Video?" tahrirlash kartasi.
+     - Pastki suzuvchi composer (`canvas-composer`): Loyiha `awaiting_render` yoki `done` holatida bo'lganda, foydalanuvchi yozgan har qanday o'zgartirish so'rovi avtomatik tarzda `edit` harakati orqali agentga yuboriladi.
+
+5. **Phase F8 — Soxta To'lov va Kreditlar Tizimi (Billing Engine & Guards):**
+   - **Upgrade API (`/api/billing/upgrade`):** POST orqali soxta to'lov oqimi (Pro: +30 kredit, Team: +100 kredit), tranzaksiyalar `credit_ledger` ga yoziladi va faol balans yangilanadi.
+   - **History API (`/api/billing/history`):** GET orqali foydalanuvchining so'nggi kredit harakatlari ro'yxati olinadi.
+   - **Server-side Guards (HTTP 402 Payment Required):** 
+     - `POST /api/jobs` da balans 0 bo'lsa yangi job ochish bloklandi.
+     - `POST /api/jobs/[id]/action` da `action === 'render'` so'rovi balans 0 bo'lsa 402 xatosi bilan to'xtatildi.
+   - **Interaktiv Billing Sahifasi (`src/components/BillingClient.tsx`):**
+     - Faol balans kartasi va Pro/Team/Free tier statusi.
+     - 3 ta tarif kartasi (Free Starter, Pro Creator, Team & Agency).
+     - "Upgrade to Pro (Mock)" / "Upgrade to Team (Mock)" bosilganda Apple-minimalist Mock Checkout modal oynasi (1-Tap demo checkout yoki Test Card).
+     - To'lov muvaffaqiyatli o'tgach, real-vaqtda balans animatsiyasi va "Credit Activity History" jadvali yangilanadi.
+   - **Review & Render Guard (`src/components/ProjectLiveTracker.tsx`):**
+     - Balans 0 bo'lganda sariq ogohlantiruvchi "No Video Credits Remaining" kartasi chiqadi.
+     - "Render Video (1080p MP4)" tugmasi qulflanadi (`<Lock />`, "0 Credits (Upgrade to Render)").
+     - Sahifadan chiqmasdan to'g'ridan-to'g'ri kredit to'ldirish uchun in-place "Upgrade to Render" modal oynasi ochiladi va kredit qo'shilgach, tugma shu zahotiyoq ochiladi.
+   - **New Video Formasi (`src/app/(app)/new/page.tsx`):**
+     - 0 kredit qolganda yuqorida ogohlantirish banneri va `/billing` havolasi ko'rsatiladi.
+
+6. **Phase F9 — Oddiy Vizual Muharrir (Simple Visual Editor / Studio Soddalashtirish):**
+   - **Simple Visual Editor UI (`src/components/SimpleVisualEditor.tsx`):**
+     - Katta va silliq Stage Preview oynasi (16:9, 9:16, 1:1 formatlariga moslashadi, jonli tipografiya va subtitr bilan).
+     - Sahna inspektori: On-Screen Headline, Voiceover Script (so'zlar hisoblagichi bilan), davomiylik steppyerlari (`- 1s`, `+ 1s`), Visual Direction bloki va har bir sahna uchun alohida AI yordamchi prompti.
+     - Pastki gorizontal Timeline Filmstrip: har bir sahna kadrining vizual kartochkasi, kadr turi (`Hook`, `Intro`, `CTA`...), vaqt ko'rsatkichi va tezkor sahna tanlash.
+   - **Scene Persistence API (`/api/jobs/[id]/scenes`):**
+     - GET orqali `STORYBOARD.md` parsed kadrlarini olish.
+     - POST orqali foydalanuvchi kiritgan o'zgarishlarni to'g'ridan-to'g'ri `STORYBOARD.md` ga yozish (`serializeStoryboardMarkdown`).
+   - **UI Integratsiyasi (`src/components/ProjectLiveTracker.tsx`):**
+     - Canvas View Toggle: "Player", "Visual Editor" va "Advanced: Studio" o'rtasida bir zumda o'tish.
+     - "Save & Render" orqali to'g'ridan-to'g'ri yangilangan sahnalar bilan video renderini ishga tushirish.
+
+7. **Multi-Aspect Ratio (9:16 Portrait & 1:1 Square) Qo'llab-quvvatlash:**
+   - **BRIEF.md avto-destination:** `aspect: 1080x1920` bo'lsa avtomatik `destination: tiktok`, `1080x1080` bo'lsa `destination: social-feed`, `1920x1080` bo'lsa `destination: website` qilib shakllantiriladi.
+   - **Agent ko'rsatmalari (`worker/host-contract.md`):** Headless agentga 9:16 da elementlarni vertikal stack qilish, sarlavhani yuqori 30% ga joylash, mahsulot UI'larini kattalashtirib (zoom) ko'rsatish va pastki 17% subtitr xavfsiz zonasini saqlash qat'iy topshirildi.
+   - **Storyboard & Persistence (`src/lib/storyboard-parser.ts`):** `format` maydoni to'liq o'qiladi va qayta saqlashda yo'qolib ketmaydi.
+   - **Simple Visual Editor & Live Tracker UI:** 9:16 tanlanganda sahna tahrirlash oynasi haqiqiy iPhone Dynamic Island va mobil ramkasiga aylanadi, subtitr va matnlar avtomatik vertikal markazga tushadi.
+
+8. **To'liq Tekshiruv:**
+   - `pnpm run typecheck` ➔ 0 xato (qat'iy TypeScript).
+   - `pnpm run build` ➔ 0 xato, Next.js 16 (Turbopack) ishlab chiqarish buildi toza yakunlandi.
+   - 9:16 va 1:1 brief generatori to'liq test qilindi.
+   - `GET /api/jobs/job_spike_cap/scenes` orqali barcha 7 ta kadr to'liq va xatosiz o'qilishi tekshirildi.
+   - `STORYBOARD.md` to'liq 7 ta kadri bilan saqlab qo'yildi.
+   - Mock upgrade API va history API to'liq test qilindi (balans 1 dan 31 ga oshdi).
+   - 0-kreditli test foydalanuvchisi bilan render qilganda HTTP 402 guard to'g'ri ishlashi isbotlandi.
 
 ---
 
